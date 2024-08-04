@@ -5,7 +5,7 @@ import {
   dataGeneralSidebar,
   dataSupportSidebar,
   dataToolsSidebar,
-} from "./sidebar-routes.type";
+} from "./sidebar-routes.data";
 import { SidebarItem } from "@/components/sidebar-item";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
