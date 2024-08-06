@@ -1,10 +1,9 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { SendHorizonal } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<{ text: string; sender: string }[]>(
@@ -12,10 +11,17 @@ export default function ChatPage() {
   );
   const [input, setInput] = useState("");
 
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   const handleSend = () => {
     if (input.trim()) {
       setMessages([...messages, { text: input, sender: "user" }]);
       setInput("");
+
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+      }
+
       // Simulación de respuesta del bot
       setTimeout(() => {
         setMessages((prev) => [
@@ -25,6 +31,21 @@ export default function ChatPage() {
       }, 1500);
     }
   };
+
+  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  };
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [input]);
 
   return (
     <div
@@ -50,7 +71,7 @@ export default function ChatPage() {
                     className={`flex items-center justify-center h-10 w-10 rounded-full bg-slate-500 flex-shrink-0 
                     ${msg.sender === "user" ? "order-2 ml-2" : "mr-2"}`}
                   >
-                    A
+                    {msg.sender === "user" ? "U" : "A"}
                   </div>
                   <div
                     className={`relative text-sm py-2 px-4 shadow rounded-xl max-w-[34rem]
@@ -69,15 +90,17 @@ export default function ChatPage() {
             ))}
           </div>
 
-          <div className="flex flex-row items-center h-16 rounded-xl bg-white dark:bg-[#2F2F2F] w-full px-4">
+          <div className="flex flex-row items-end p-3 rounded-xl bg-white dark:bg-[#2F2F2F] w-full px-4">
             <div className="flex-grow ml-4">
               <div className="w-full">
                 <Textarea
-                  placeholder="Escribe tu mensaje..."
-                  value={input}
                   className="max-h-72 min-h-10 resize-none dark:text-white dark:bg-[#2F2F2F] dark:border-white/20"
-                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Escribe tu mensaje..."
+                  ref={textareaRef}
                   rows={1}
+                  value={input}
+                  onChange={handleInput}
+                  // onChange={(e) => setInput(e.target.value)}
                 />
               </div>
             </div>
