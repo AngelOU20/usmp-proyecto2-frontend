@@ -11,7 +11,13 @@ export const Logo = () => {
       className="min-h-20 flex items-center px-6 cursor-pointer gap-2 mt-4"
       onClick={() => router.push("/")}
     >
-      <Image src={"/logo.png"} alt="logo" width={220} height={30} priority />
+      <Image
+        src={"/logo-fia.png"}
+        alt="logo"
+        width={260}
+        height={60}
+        priority
+      />
     </div>
   );
 };
