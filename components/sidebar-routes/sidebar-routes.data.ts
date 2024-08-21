@@ -11,7 +11,7 @@ import {
 export const dataGeneralSidebar = [
   {
     icon: PanelsTopLeft,
-    label: "Dashboard",
+    label: "Inicio",
     href: "/",
   },
   {
@@ -31,11 +31,6 @@ export const dataToolsSidebar = [
     icon: CircleHelpIcon,
     label: "Faqs",
     href: "/faqs",
-  },
-  {
-    icon: BarChart4,
-    label: "Analytics",
-    href: "/analytics",
   },
 ];
 
