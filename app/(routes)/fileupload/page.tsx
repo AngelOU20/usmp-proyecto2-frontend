@@ -39,7 +39,7 @@ export default function FileUploadPage() {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl mb-4">File Upload</h1>
+      <h1 className="text-2xl mb-4">Subida de archivos</h1>
       <input
         type="file"
         multiple
