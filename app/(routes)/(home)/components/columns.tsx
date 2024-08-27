@@ -33,21 +33,21 @@ export const data: Document[] = [
     name: "BITACORA_Ucharima_Valer_242_P2_S03",
     size: 8.37,
     type: "Bitácora",
-    dateUpload: "22 de julio de 2024",
+    dateUpload: "21 de julio de 2024",
   },
   {
     id: "5kma53ae",
     name: "Cronograma_EF_Proyecto_I",
     size: 8.74,
     type: "Cronograma",
-    dateUpload: "22 de julio de 2024",
+    dateUpload: "20 de julio de 2024",
   },
   {
     id: "bhqecj4p",
     name: "Cronograma_EF_Proyecto_II",
     size: 7.21,
     type: "Cronograma",
-    dateUpload: "22 de julio de 2024",
+    dateUpload: "20 de julio de 2024",
   },
 ];
 
