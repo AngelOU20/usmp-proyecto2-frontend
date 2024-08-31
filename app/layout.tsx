@@ -9,9 +9,9 @@ export const metadata: Metadata = {
   title: "FIA - EPICS",
   description:
     "Aplicación para el uso de los estudiantes y profesores de la EPICS",
-  icons: {
-    icon: "/logo-usmp.png",
-  },
+  // icons: {
+  //   icon: "/logo-usmp.png",
+  // },
 };
 
 export default function RootLayout({
