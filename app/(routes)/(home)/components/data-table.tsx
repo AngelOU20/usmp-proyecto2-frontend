@@ -2,7 +2,8 @@
 
 import * as React from "react";
 
-import { columns, data } from "./columns";
+import { columns } from "./columns";
+import { data } from "./document.data";
 
 import {
   ColumnFiltersState,
