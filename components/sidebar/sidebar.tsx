@@ -7,7 +7,7 @@ export const Sidebar = () => {
       <div className="h-full flex flex-col border-r">
         <div className="flex flex-col">
           <Logo />
-          <p className="pl-10 text-xs text-red-700 font-semibold">
+          <p className="pl-10 text-xs text-red-700 dark:text-white font-semibold">
             Escuela de Ingeniería de Computación y Sistemas
           </p>
         </div>

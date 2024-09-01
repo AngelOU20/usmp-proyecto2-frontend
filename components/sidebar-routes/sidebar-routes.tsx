@@ -15,7 +15,7 @@ export const SidebarRoutes = () => {
     <div className="flex flex-col justify-between h-full">
       <div className="p-2">
         <div className="p-2 md:p-6">
-          <p className="text-slate-500 dark:text-slate-200 mb-4">GENERAL</p>
+          <p className="text-slate-500 dark:text-slate-400 mb-4">GENERAL</p>
           {dataGeneralSidebar.map((item) => (
             <React.Fragment key={item.label}>
               <SidebarItem item={item} />
@@ -26,7 +26,7 @@ export const SidebarRoutes = () => {
         <Separator />
 
         <div className="p-2 md:p-6">
-          <p className="text-slate-500 dark:text-slate-200 mb-4">
+          <p className="text-slate-500 dark:text-slate-400 mb-4">
             HERRAMIENTAS
           </p>
           {dataToolsSidebar.map((item) => (
@@ -39,7 +39,7 @@ export const SidebarRoutes = () => {
         <Separator />
 
         <div className="p-2 md:p-6">
-          <p className="text-slate-500 dark:text-slate-200 mb-4">SOPORTE</p>
+          <p className="text-slate-500 dark:text-slate-400 mb-4">SOPORTE</p>
           {dataSupportSidebar.map((item) => (
             <React.Fragment key={item.label}>
               <SidebarItem item={item} />
@@ -60,7 +60,7 @@ export const SidebarRoutes = () => {
           <span className="font-medium">
             By{" "}
             <a href="https://github.com/AngelOU20" target="_blank">
-              AngelOU20
+              AngelOU20 & Valito
             </a>
           </span>
         </footer>

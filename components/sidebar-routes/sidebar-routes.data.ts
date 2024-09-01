@@ -1,5 +1,6 @@
 import {
-  BarChart4,
+  FilesIcon,
+  BookUser,
   PanelsTopLeft,
   MessagesSquare,
   Upload,
@@ -10,9 +11,14 @@ import {
 
 export const dataGeneralSidebar = [
   {
-    icon: PanelsTopLeft,
-    label: "Inicio",
+    icon: FilesIcon,
+    label: "Gestión de documentos",
     href: "/",
+  },
+  {
+    icon: BookUser,
+    label: "Gestión de grupos",
+    href: "/group-students",
   },
   {
     icon: Upload,
