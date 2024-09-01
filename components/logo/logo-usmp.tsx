@@ -3,12 +3,19 @@
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export const Logo = () => {
   const router = useRouter();
-  const { theme } = useTheme();
+  const { theme, resolvedTheme } = useTheme();
+  const [logoSrc, setLogoSrc] = useState("/temp-logo-fia.png");
 
-  const logoSrc = theme === "dark" ? "/logo-fia-white.png" : "/logo-fia.png";
+  useEffect(() => {
+    const currentTheme = theme === "system" ? resolvedTheme : theme;
+    setLogoSrc(
+      currentTheme === "dark" ? "/logo-fia-white.png" : "/temp-logo-fia.png"
+    );
+  }, [theme, resolvedTheme]);
 
   return (
     <div
