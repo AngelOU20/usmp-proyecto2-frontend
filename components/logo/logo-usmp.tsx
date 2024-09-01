@@ -12,7 +12,7 @@ export const Logo = () => {
 
   return (
     <div
-      className="min-h-20 flex items-center px-6 cursor-pointer gap-2 mt-4"
+      className="min-h-20 flex items-center gap-2 px-6 cursor-pointer mt-4"
       onClick={() => router.push("/")}
     >
       <Image src={logoSrc} alt="logo" width={260} height={60} priority />
