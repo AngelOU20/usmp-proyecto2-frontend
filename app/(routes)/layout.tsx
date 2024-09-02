@@ -14,7 +14,14 @@ const Homelayout: React.FC<LayoutProps> = ({ children }) => {
       </div>
       <div className="w-full lg:ml-80">
         <Navbar />
-        <div className="p-6 bg-[#fafbfc] dark:bg-background">{children}</div>
+        <div
+          className="p-6 bg-[#fafbfc] dark:bg-background"
+          style={{
+            height: "calc(100vh - 5rem)",
+          }}
+        >
+          {children}
+        </div>
       </div>
     </div>
   );

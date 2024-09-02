@@ -1,9 +1,9 @@
-import { DocumentsTable } from "./components/data-table";
+import { DocumentsTable } from "./components/document-table";
 
 export default function HomePage() {
   return (
-    <div>
+    <>
       <DocumentsTable />
-    </div>
+    </>
   );
 }
