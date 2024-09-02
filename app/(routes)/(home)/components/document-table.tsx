@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { columns } from "./columns";
+import { getColumns } from "./document-table-columns";
 import { data } from "./document.data";
 
 import {
@@ -17,9 +17,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 
-import { ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -28,12 +25,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DataTablePagination, DataTableToolbar } from "@/components/data-table";
+import { DataTableFilterField, Document, Option } from "./document.type";
+
+// Define las opciones de tipo de documento basadas en el tipo definido
+const fileTypeOptions: Option[] = [
+  { label: "Bitácora", value: "Bitácora" },
+  { label: "Directiva", value: "Directiva" },
+  { label: "Cronograma", value: "Cronograma" },
+];
 
 export const DocumentsTable = () => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -43,6 +43,21 @@ export const DocumentsTable = () => {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+
+  const columns = React.useMemo(() => getColumns(), []);
+
+  const filterFields: DataTableFilterField<Document>[] = [
+    {
+      label: "Nombre del Documento",
+      value: "name",
+      placeholder: "Filtrar por nombre del documento",
+    },
+    {
+      label: "Tipo de documento",
+      value: "type",
+      options: fileTypeOptions,
+    },
+  ];
 
   const table = useReactTable({
     data,
@@ -59,47 +74,15 @@ export const DocumentsTable = () => {
       sorting,
       columnFilters,
       columnVisibility,
+      columnPinning: { right: ["actions"] },
       rowSelection,
     },
   });
 
   return (
     <div className="w-full">
-      <div className="flex items-center py-4">
-        <Input
-          placeholder="Filtra por el nombre del documento"
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("name")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columnas <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
+      <div className="flex items-center gap-2 py-4">
+        <DataTableToolbar table={table} filterFields={filterFields} />
       </div>
       <div className="rounded-md border">
         <Table>
@@ -152,30 +135,7 @@ export const DocumentsTable = () => {
         </Table>
       </div>
 
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} de{" "}
-          {table.getFilteredRowModel().rows.length} fila(s) seleccionada.
-        </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Anterior
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Siguiente
-          </Button>
-        </div>
-      </div>
+      <DataTablePagination table={table} />
     </div>
   );
 };
