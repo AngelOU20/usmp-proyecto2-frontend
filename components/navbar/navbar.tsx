@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SidebarRoutes } from "@/components/sidebar-routes";
 import { ModeToggle } from "@/components/toogle-theme";
+import { UserAvatar } from "@/components/user";
 
 export const Navbar = () => {
   return (
@@ -23,7 +24,7 @@ export const Navbar = () => {
       </div>
       <div className="flex gap-x-2 md:gap-x-8 items-center">
         <ModeToggle />
-        {/* <UserButton /> */}
+        <UserAvatar />
       </div>
     </nav>
   );
