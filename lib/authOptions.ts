@@ -12,6 +12,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       tenantId: AUTH_MICROSOFT_ENTRA_ID_TENANT_ID,
     }),
   ],
+  callbacks: {
+    authorized: async ({ auth }) => {
+      // Logged in users are authenticated, otherwise redirect to login page
+      return !!auth;
+    },
+  },
   // callbacks: {
   //   async jwt ({ token, account }) {
   //     if (account) {
