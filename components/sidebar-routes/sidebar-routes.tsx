@@ -8,7 +8,6 @@ import {
 } from "./sidebar-routes.data";
 import { SidebarItem } from "@/components/sidebar-item";
 import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
 
 export const SidebarRoutes = () => {
   return (
@@ -49,12 +48,8 @@ export const SidebarRoutes = () => {
       </div>
 
       <div className="p-2">
-        <div className="text-center p-6">
-          <Button variant="outline" className="w-full">
-            Cerrar Sesión
-          </Button>
-        </div>
         <Separator />
+
         <footer className="mt-3 p-3 text-center text-sm text-slate-500">
           2024.{" "}
           <span className="font-medium">
