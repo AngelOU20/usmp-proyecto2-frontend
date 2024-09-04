@@ -47,9 +47,9 @@ export const SidebarRoutes = () => {
         </div>
       </div>
 
-      <div className="p-2">
-        <Separator />
+      <Separator />
 
+      <div className="p-2">
         <footer className="mt-3 p-3 text-center text-sm text-slate-500">
           2024.{" "}
           <span className="font-medium">
