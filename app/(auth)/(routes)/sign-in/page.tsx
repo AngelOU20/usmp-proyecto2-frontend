@@ -5,6 +5,10 @@ import { signIn } from "next-auth/react";
 import Image from "next/image";
 
 export default function SigninPage() {
+  const handleClick = async () => {
+    await signIn("microsoft");
+  };
+
   return (
     <div className="flex h-screen items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
@@ -15,7 +19,7 @@ export default function SigninPage() {
           Inicia sesión para acceder a tu cuenta
         </p>
         <Button
-          onClick={() => signIn("microsoft", { callbackUrl: "/" })}
+          onClick={handleClick}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 flex items-center justify-center space-x-2"
         >
           <Image
