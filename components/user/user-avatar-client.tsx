@@ -10,11 +10,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
 import { LogOut, Settings, User } from "lucide-react";
 
 export const UserAvatar = () => {
   const { data: session, status } = useSession();
+  const user = session?.user;
 
   if (status === "loading") {
     return (
@@ -24,7 +24,7 @@ export const UserAvatar = () => {
     );
   }
 
-  if (!session || !session.user) {
+  if (!session || !user) {
     return null; // No renderizar nada si no hay sesión
   }
 
@@ -46,35 +46,25 @@ export const UserAvatar = () => {
           size="icon"
           className="overflow-hidden rounded-full"
         >
-          {session.user.image ? (
-            <Image
-              src={session.user.image}
-              width={36}
-              height={36}
-              alt="Avatar"
-              className="overflow-hidden rounded-full"
-            />
-          ) : (
-            <div
-              className="flex items-center justify-center w-9 h-9 rounded-full"
-              style={{
-                backgroundColor:
-                  "#" + (((1 << 24) * Math.random()) | 0).toString(16),
-              }} // Genera un color aleatorio
-            >
-              <span className="text-white font-medium">
-                {getInitials(session.user.name || "User")}
-              </span>
-            </div>
-          )}
+          <div
+            className="flex items-center justify-center w-9 h-9 rounded-full"
+            style={{
+              backgroundColor:
+                "#" + (((1 << 24) * Math.random()) | 0).toString(16),
+            }} // Genera un color aleatorio
+          >
+            <span className="text-white font-medium">
+              {getInitials(user.name || "User")}
+            </span>
+          </div>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel className="text-sm -mb-2">
-          {session.user.name}
+          {user.name}
         </DropdownMenuLabel>
         <DropdownMenuLabel className="text-slate-900 dark:text-slate-200 text-xs font-normal">
-          {session.user.email}
+          {user.email}
         </DropdownMenuLabel>
 
         <DropdownMenuSeparator />
