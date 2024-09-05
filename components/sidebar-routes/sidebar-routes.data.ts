@@ -35,7 +35,7 @@ export const dataGeneralSidebar = [
 export const dataToolsSidebar = [
   {
     icon: CircleHelpIcon,
-    label: "Faqs",
+    label: "Preguntas frecuentes",
     href: "/faqs",
   },
 ];
