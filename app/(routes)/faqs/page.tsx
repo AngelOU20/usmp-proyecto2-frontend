@@ -3,7 +3,7 @@ import { AccordionFaqs } from "./components/AccordionFaqs";
 
 export default function FaqsPage() {
   return (
-    <div className="max-w-4xl p-6 mx-auto rounded-lg shadow-md bg-background">
+    <div className="max-w-6xl p-6 mx-auto rounded-lg shadow-md bg-background">
       <div className="mb-5">
         <h2 className="mb-8 text-3xl font-semibold">
           Preguntas Frecuentes (FAQS)
