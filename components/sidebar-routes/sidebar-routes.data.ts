@@ -18,7 +18,7 @@ export const dataGeneralSidebar = [
   {
     icon: BookUser,
     label: "Gestión de grupos",
-    href: "/group-students",
+    href: "/student-group",
   },
   {
     icon: Upload,
