@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/table";
 import { DataTablePagination, DataTableToolbar } from "@/components/data-table";
 import { Document } from "./document.type";
-import { DataTableFilterField, Option } from "@/lib/types/data-table.types";
+import { DataTableFilterField, Option } from "@/types/data-table.types";
 
 // Define las opciones de tipo de documento basadas en el tipo definido
 const fileTypeOptions: Option[] = [

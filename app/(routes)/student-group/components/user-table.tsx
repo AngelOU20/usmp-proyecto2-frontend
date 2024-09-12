@@ -26,7 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DataTablePagination, DataTableToolbar } from "@/components/data-table";
-import { DataTableFilterField } from "@/lib/types/data-table.types";
+import { DataTableFilterField } from "@/types/data-table.types";
 import { User } from "./user.type";
 
 const filterFields: DataTableFilterField<User>[] = [
