@@ -1,7 +1,6 @@
 import {
   FilesIcon,
   BookUser,
-  PanelsTopLeft,
   MessagesSquare,
   Upload,
   Settings,
@@ -9,7 +8,34 @@ import {
   CircleHelpIcon,
 } from "lucide-react";
 
-export const dataGeneralSidebar = [
+// Definir los roles permitidos para cada ruta
+export const dataGeneral1 = [
+  {
+    icon: MessagesSquare,
+    label: "Chat",
+    href: "/chat",
+  },
+];
+
+export const dataGeneral2 = [
+  {
+    icon: FilesIcon,
+    label: "Gestión de documentos",
+    href: "/",
+  },
+  {
+    icon: Upload,
+    label: "Subida de archivos",
+    href: "/fileupload",
+  },
+  {
+    icon: MessagesSquare,
+    label: "Chat",
+    href: "/chat",
+  },
+];
+
+export const dataGeneral3 = [
   {
     icon: FilesIcon,
     label: "Gestión de documentos",
