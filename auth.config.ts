@@ -10,6 +10,7 @@ export default {
       clientId: AUTH_MICROSOFT_ENTRA_ID_ID,
       clientSecret: AUTH_MICROSOFT_ENTRA_ID_SECRET,
       tenantId: AUTH_MICROSOFT_ENTRA_ID_TENANT_ID,
+      allowDangerousEmailAccountLinking: true,
     }),
   ],
 } satisfies NextAuthConfig;
