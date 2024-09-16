@@ -2,13 +2,15 @@
 
 import { useSession } from "next-auth/react";
 import {
-  dataGeneral1,
-  dataGeneral2,
-  dataGeneral3,
-  dataSupportSidebar,
-  dataToolsSidebar,
+  routesForGeneralUser,
+  routesForTeamMember,
+  routesForMentor,
+  routesForAuthority,
+  routesForToolsSidebar,
+  routesForSupportSidebar,
 } from "./sidebar-routes.data";
 import { SidebarItem } from "@/components/sidebar-item";
+import { SidebarSkeleton } from "@/components/sidebar-routes";
 import { Separator } from "@/components/ui/separator";
 
 export const SidebarRoutes = () => {
@@ -17,23 +19,25 @@ export const SidebarRoutes = () => {
   console.log("Session:", session, status);
 
   if (status === "loading") {
-    return <div>Cargando...</div>; // Muestra un indicador de carga mientras se obtiene la sesión
+    return <SidebarSkeleton />;
   }
 
   // Determinar qué conjunto de rutas mostrar en función del roleId
-  const dataGeneralSidebar =
-    session?.user?.roleId === 1
-      ? dataGeneral1
-      : session?.user?.roleId === 2
-      ? dataGeneral2
-      : dataGeneral3;
+  const roleRoutesMap: Record<number, typeof routesForGeneralUser> = {
+    1: routesForGeneralUser,
+    2: routesForTeamMember,
+    3: routesForMentor,
+    4: routesForAuthority,
+  };
+
+  const routesForRole = roleRoutesMap[session?.user?.roleId || 1];
 
   return (
     <div className="flex flex-col justify-between h-full">
       <div className="p-2">
         <div className="p-2 md:p-6">
           <p className="text-slate-500 dark:text-slate-400 mb-4">GENERAL</p>
-          {dataGeneralSidebar.map((item) => (
+          {routesForRole.map((item) => (
             <SidebarItem key={item.label} item={item} />
           ))}
         </div>
@@ -44,7 +48,7 @@ export const SidebarRoutes = () => {
           <p className="text-slate-500 dark:text-slate-400 mb-4">
             HERRAMIENTAS
           </p>
-          {dataToolsSidebar.map((item) => (
+          {routesForToolsSidebar.map((item) => (
             <SidebarItem key={item.label} item={item} />
           ))}
         </div>
@@ -53,7 +57,7 @@ export const SidebarRoutes = () => {
 
         <div className="p-2 md:p-6">
           <p className="text-slate-500 dark:text-slate-400 mb-4">SOPORTE</p>
-          {dataSupportSidebar.map((item) => (
+          {routesForSupportSidebar.map((item) => (
             <SidebarItem key={item.label} item={item} />
           ))}
         </div>
