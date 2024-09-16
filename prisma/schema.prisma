@@ -47,17 +47,21 @@ model Mentor {
 
   students      Student[]
 
-  user          User            @relation(fields: [userId], references: [id])
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Student {
-  id            Int             @id @default(autoincrement())
-  userId        String          @unique // Llave foránea que apunta a User
-  mentorId      Int
+  id                  Int       @id @default(autoincrement())
+  userId              String    @unique // Llave foránea que apunta a User
+  mentorId            Int?      // Campo opcional
+  group               String?    // Grupo del estudiante
+  registrationNumber  String?    // Número de matrícula del estudiante
+  titleProject        String?    // Título del trabajo de investigación
 
-  user          User            @relation(fields: [userId], references: [id])
-  mentor        Mentor          @relation(fields: [mentorId], references: [id])
+  user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mentor              Mentor?   @relation(fields: [mentorId], references: [id], onDelete: SetNull)
 }
+
 
 model Authority {
   id            Int             @id @default(autoincrement())
@@ -88,4 +92,5 @@ model Account {
   user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([provider, providerAccountId])
+  @@unique([userId, provider])
 }
