@@ -6,10 +6,11 @@ import {
   Settings,
   ShieldCheck,
   CircleHelpIcon,
+  User2,
 } from "lucide-react";
 
 // Definir los roles permitidos para cada ruta
-export const dataGeneral1 = [
+export const routesForGeneralUser = [
   {
     icon: MessagesSquare,
     label: "Chat",
@@ -17,7 +18,7 @@ export const dataGeneral1 = [
   },
 ];
 
-export const dataGeneral2 = [
+export const routesForTeamMember = [
   {
     icon: FilesIcon,
     label: "Gestión de documentos",
@@ -35,7 +36,7 @@ export const dataGeneral2 = [
   },
 ];
 
-export const dataGeneral3 = [
+export const routesForMentor = [
   {
     icon: FilesIcon,
     label: "Gestión de documentos",
@@ -57,8 +58,35 @@ export const dataGeneral3 = [
     href: "/chat",
   },
 ];
+export const routesForAuthority = [
+  {
+    icon: FilesIcon,
+    label: "Gestión de documentos",
+    href: "/",
+  },
+  {
+    icon: BookUser,
+    label: "Gestión de grupos",
+    href: "/student-group",
+  },
+  {
+    icon: User2,
+    label: "Gestión de asesores",
+    href: "/mentor-management",
+  },
+  {
+    icon: Upload,
+    label: "Subida de archivos",
+    href: "/fileupload",
+  },
+  {
+    icon: MessagesSquare,
+    label: "Chat",
+    href: "/chat",
+  },
+];
 
-export const dataToolsSidebar = [
+export const routesForToolsSidebar = [
   {
     icon: CircleHelpIcon,
     label: "Preguntas frecuentes",
@@ -66,7 +94,7 @@ export const dataToolsSidebar = [
   },
 ];
 
-export const dataSupportSidebar = [
+export const routesForSupportSidebar = [
   {
     icon: Settings,
     label: "Configuración",
