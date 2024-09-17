@@ -2,10 +2,8 @@
 
 import * as React from "react";
 
-import { getColumns } from "./document-table-columns";
-import { data } from "./document.data";
-
 import {
+  ColumnDef,
   ColumnFiltersState,
   SortingState,
   VisibilityState,
@@ -31,12 +29,23 @@ import { DataTableFilterField, Option } from "@/types/data-table.types";
 
 // Define las opciones de tipo de documento basadas en el tipo definido
 const fileTypeOptions: Option[] = [
-  { label: "Bitácora", value: "Bitácora" },
-  { label: "Directiva", value: "Directiva" },
+  { label: "Bitácora", value: "Bitacora" },
   { label: "Cronograma", value: "Cronograma" },
+  { label: "Informes", value: "Informes" },
+  { label: "Directiva", value: "Directiva" },
+  { label: "Otros", value: "Otros" },
 ];
 
-export const DocumentsTable = () => {
+// Actualiza el UserTable para recibir `data` como prop
+interface DocumentTableProps {
+  columns: ColumnDef<Document>[];
+  data: Document[];
+}
+
+export const DocumentsTable: React.FC<DocumentTableProps> = ({
+  columns,
+  data,
+}) => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -44,8 +53,6 @@ export const DocumentsTable = () => {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-
-  const columns = React.useMemo(() => getColumns(), []);
 
   const filterFields: DataTableFilterField<Document>[] = [
     {
