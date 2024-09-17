@@ -17,7 +17,7 @@ const Homelayout: React.FC<LayoutProps> = ({ children }) => {
         <div
           className="p-6 bg-[#fafbfc] dark:bg-background"
           style={{
-            height: "calc(100vh - 5rem)",
+            minHeight: "calc(100vh - 5rem)",
           }}
         >
           {children}
