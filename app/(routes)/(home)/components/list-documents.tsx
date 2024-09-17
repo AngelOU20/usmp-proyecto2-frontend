@@ -8,8 +8,8 @@ import { Document } from "./document.type";
 
 export const ListDocuments = () => {
   const [documentData, setdocumentData] = useState<Document[]>([]);
-  const [isLoading, setIsLoading] = useState(true); // Estado para controlar la carga
-  const [error, setError] = useState<string | null>(null); // Estado para manejar errores (opcional)
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const columns = useMemo(() => getColumns(), []);
 
@@ -40,6 +40,10 @@ export const ListDocuments = () => {
         <Spinner />
       </div>
     );
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
   }
 
   return (

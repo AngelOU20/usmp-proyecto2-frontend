@@ -23,10 +23,10 @@ import {
 } from "@/components/ui/table";
 import { DataTablePagination, DataTableToolbar } from "@/components/data-table";
 import { DataTableFilterField } from "@/types/data-table.types";
-import { Student } from "./student.type"; // Asegúrate de que este tipo esté definido
+import { Student } from "./student.type";
 import { ColumnDef } from "@tanstack/react-table";
 
-// Cambia la interfaz para recibir columnas y datos
+// Interfaz para recibir columnas y datos
 interface UserTableProps {
   columns: ColumnDef<Student>[];
   data: Student[];
@@ -50,8 +50,8 @@ export const StudentTable: React.FC<UserTableProps> = ({ columns, data }) => {
   const [rowSelection, setRowSelection] = React.useState({});
 
   const table = useReactTable({
-    data, // Aquí pasamos los datos
-    columns, // Aquí pasamos las columnas
+    data,
+    columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),

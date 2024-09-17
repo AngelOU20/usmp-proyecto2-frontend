@@ -8,8 +8,9 @@ import { Student } from "./student.type";
 
 export const ListStudents = () => {
   const [studentData, setStudentData] = useState<Student[]>([]);
-  const [isLoading, setIsLoading] = useState(true); // Estado para controlar la carga
-  const [error, setError] = useState<string | null>(null); // Estado para manejar errores (opcional)
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const columns = React.useMemo(() => getColumns(), []);
 
   useEffect(() => {
