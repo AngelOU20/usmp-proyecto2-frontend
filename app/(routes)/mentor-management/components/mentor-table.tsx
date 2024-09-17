@@ -25,12 +25,21 @@ import {
 import { DataTablePagination, DataTableToolbar } from "@/components/data-table";
 import { SimplifiedUser } from "./mentor.type";
 import { ColumnDef } from "@tanstack/react-table";
+import { DataTableFilterField } from "@/types/data-table.types";
 
 // Actualiza el UserTable para recibir `data` como prop
 interface UserTableProps {
   columns: ColumnDef<SimplifiedUser>[];
   data: SimplifiedUser[];
 }
+
+const filterFields: DataTableFilterField<SimplifiedUser>[] = [
+  {
+    label: "Nombre del asesor",
+    value: "name",
+    placeholder: "Filtrar por el nombre",
+  },
+];
 
 export const MentorTable: React.FC<UserTableProps> = ({ columns, data }) => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -63,7 +72,7 @@ export const MentorTable: React.FC<UserTableProps> = ({ columns, data }) => {
   return (
     <div className="w-full">
       <div className="flex items-center gap-2 py-4">
-        <DataTableToolbar table={table} />
+        <DataTableToolbar table={table} filterFields={filterFields} />
       </div>
       <div className="rounded-md border">
         <Table>
