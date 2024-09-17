@@ -1,11 +1,14 @@
-import { UserTable } from "./components/user-table";
+import { CsvUploaderStudent } from "@/components/upload/csv-upload-student";
+import { ListStudents } from "./components/list-students";
 
 export default function StudentsGroupPage() {
   return (
-    <>
-      <h1>Grupo de estudiantes</h1>
+    <div className="max-w-6xl mx-auto flex flex-col flex-auto h-full">
+      <h1 className="text-2xl font-semibold mb-5">Grupo de estudiantes</h1>
 
-      <UserTable />
-    </>
+      <CsvUploaderStudent />
+
+      <ListStudents />
+    </div>
   );
 }
