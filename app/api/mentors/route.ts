@@ -11,12 +11,12 @@ export async function GET (request: Request) {
     },
   });
 
-  const mentorData = mentors.map((mentor) => ({
+  const mappedMentors = mentors.map((mentor) => ({
     id: mentor.user.id,
     name: mentor.user.name,
     email: mentor.user.email,
     phone: mentor.user.phone || "No disponible",
   }));
 
-  return NextResponse.json(mentorData);
+  return NextResponse.json({ mentors: mappedMentors });
 }
