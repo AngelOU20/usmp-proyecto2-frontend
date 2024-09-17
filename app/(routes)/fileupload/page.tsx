@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import React, { useState } from "react";
+import { toast } from "@/hooks/use-toast";
 
 interface FileItem {
   file: File;
@@ -33,19 +34,85 @@ export default function FileUploadPage() {
     setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
   };
 
+  // Función para subir archivos al backend
   const uploadFile = async (fileItem: FileItem, index: number) => {
+    if (!selectedDocumentType) {
+      toast({
+        title: "Error",
+        description: "Por favor selecciona un tipo de documento.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const formData = new FormData();
     formData.append("file", fileItem.file);
+    formData.append("documentType", selectedDocumentType); // Añadir el tipo de documento
 
-    // Simulando la subida de archivos y actualizando el progreso
-    for (let progress = 0; progress <= 100; progress += 10) {
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      setFiles((prevFiles) => {
-        const newFiles = [...prevFiles];
-        newFiles[index].progress = progress;
-        return newFiles;
+    try {
+      // Realiza la solicitud de subida de archivo
+      const response = await fetch("/api/document", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        toast({
+          title: "¡Éxito!",
+          description: "Archivo subido exitosamente",
+        });
+
+        // Simulación de progreso al 100%
+        for (let progress = 0; progress <= 100; progress += 10) {
+          await new Promise((resolve) => setTimeout(resolve, 200));
+          setFiles((prevFiles) => {
+            const newFiles = [...prevFiles];
+            newFiles[index].progress = progress;
+            return newFiles;
+          });
+        }
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: "Error",
+          description: errorData.error || "Error al subir el archivo",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Hubo un error al intentar subir el archivo.",
+        variant: "destructive",
       });
     }
+  };
+
+  // Subir todos los archivos a la vez
+  const handleSubmitAllFiles = async () => {
+    if (!selectedDocumentType) {
+      toast({
+        title: "Error",
+        description: "Por favor, selecciona un tipo de documento.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (files.length === 0) {
+      toast({
+        title: "Error",
+        description: "No hay archivos seleccionados para subir.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    files.forEach((fileItem, index) => {
+      if (fileItem.progress < 100) {
+        uploadFile(fileItem, index);
+      }
+    });
   };
 
   return (
@@ -54,7 +121,10 @@ export default function FileUploadPage() {
       <div>
         {/* Selector del tipo de documento */}
         <label className="mb-2 text-lg">Selecciona un tipo de documento</label>
-        <Select onValueChange={(value) => setSelectedDocumentType(value)}>
+        <Select
+          onValueChange={(value) => setSelectedDocumentType(value)}
+          value={selectedDocumentType}
+        >
           <SelectTrigger className="border p-2 rounded-lg mb-4 max-w-xl">
             <SelectValue placeholder="Selecciona..." />
           </SelectTrigger>
@@ -63,7 +133,9 @@ export default function FileUploadPage() {
               <SelectLabel>Tipos de documentos</SelectLabel>
               <SelectItem value="Bitacora">Bitacora</SelectItem>
               <SelectItem value="Cronograma">Cronograma</SelectItem>
+              <SelectItem value="Informes">Informes</SelectItem>
               <SelectItem value="Directiva">Directiva</SelectItem>
+              <SelectItem value="Otros">Otros</SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>
@@ -116,9 +188,12 @@ export default function FileUploadPage() {
           ))}
         </div>
 
-        {/* Botón para cargar los archivos */}
-        <Button className="bg-black text-white px-6 py-2 rounded mt-4 mb-4">
-          Cargar archivos
+        {/* Botón para cargar todos los archivos */}
+        <Button
+          onClick={handleSubmitAllFiles}
+          className="bg-black text-white px-6 py-2 rounded mt-4 mb-4"
+        >
+          Cargar todos los archivos
         </Button>
       </div>
     </div>
