@@ -1,9 +1,9 @@
-import { DocumentsTable } from "./components/document-table";
+import { ListDocuments } from "./components/list-documents";
 
 export default function HomePage() {
   return (
     <>
-      <DocumentsTable />
+      <ListDocuments />
     </>
   );
 }
