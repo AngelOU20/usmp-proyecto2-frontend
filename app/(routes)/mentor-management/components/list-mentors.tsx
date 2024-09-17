@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { UserTable } from "./user-table";
-import { columns } from "./user-table-columns";
+import { MentorTable } from "./mentor-table";
+import { columns } from "./mentor-table-columns";
 import { Spinner } from "@/components/spinner";
 
 export const ListMentors = () => {
@@ -19,7 +19,7 @@ export const ListMentors = () => {
           throw new Error("Error fetching mentors");
         }
         const data = await response.json();
-        setMentorData(data);
+        setMentorData(data.mentors);
         setIsLoading(false); // Finaliza la carga
       } catch (error) {
         setError("Error al cargar mentores"); // En caso de error
@@ -42,5 +42,5 @@ export const ListMentors = () => {
     return <div>Error: {error}</div>;
   }
 
-  return <UserTable columns={columns} data={mentorData} />;
+  return <MentorTable columns={columns} data={mentorData} />;
 };
