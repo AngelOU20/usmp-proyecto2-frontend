@@ -30,7 +30,6 @@ model User {
   mentor        Mentor?
   student       Student?
   authority     Authority?
-
   
   role          Role?            @relation(fields: [roleId], references: [id])
 
@@ -93,4 +92,22 @@ model Account {
 
   @@id([provider, providerAccountId])
   @@unique([userId, provider])
+}
+
+model Document {
+  id              Int       @id @default(autoincrement())
+  name            String    // Nombre del documento
+  typeId          Int       // Llave foránea que apunta a DocumentType
+  uploadDate      DateTime  @default(now()) // Fecha de subida
+  size            Float     // Tamaño del archivo en bytes
+  content         Bytes     // Contenido binario del archivo
+  
+  documentType    DocumentType @relation(fields: [typeId], references: [id])
+}
+
+model DocumentType {
+  id              Int       @id @default(autoincrement())
+  name            String    
+
+  documents       Document[]
 }
