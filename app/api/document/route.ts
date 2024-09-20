@@ -49,7 +49,6 @@ export async function POST (req: Request) {
 // GET: Obtener lista de documentos
 export async function GET () {
   try {
-    // Obtener todos los documentos con su tipo
     const documents = await prisma.document.findMany({
       select: {
         id: true,
@@ -76,5 +75,27 @@ export async function GET () {
   } catch (error) {
     console.error("Error al obtener documentos:", error);
     return NextResponse.json({ error: "Error al obtener documentos" }, { status: 500 });
+  }
+}
+
+// DELETE: Eliminar un documento por ID
+export async function DELETE (req: Request) {
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+
+  if (!id) {
+    return NextResponse.json({ error: "ID no proporcionado" }, { status: 400 });
+  }
+
+  try {
+    // Eliminar el documento por ID
+    const deletedDocument = await prisma.document.delete({
+      where: { id: Number(id) },
+    });
+
+    return NextResponse.json({ message: "Documento eliminado exitosamente", deletedDocument });
+  } catch (error) {
+    console.error("Error al eliminar el documento:", error);
+    return NextResponse.json({ error: "Error al eliminar el documento" }, { status: 500 });
   }
 }
