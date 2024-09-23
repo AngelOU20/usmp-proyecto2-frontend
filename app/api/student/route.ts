@@ -35,3 +35,34 @@ export async function GET (req: NextRequest) {
     return NextResponse.json({ error: "Error al obtener los estudiantes" }, { status: 500 });
   }
 }
+
+export async function DELETE (req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const studentId = searchParams.get('id');
+
+  if (!studentId) {
+    return NextResponse.json({ error: "Falta el ID del estudiante" }, { status: 400 });
+  }
+
+  try {
+    await prisma.student.delete({
+      where: {
+        userId: studentId,
+      }
+    });
+
+    await prisma.user.update({
+      where: {
+        id: studentId,
+      },
+      data: {
+        roleId: 1,
+      }
+    });
+
+    return NextResponse.json({ message: "Estudiante eliminado y roleId actualizado a 1" });
+  } catch (error) {
+
+  }
+
+}
