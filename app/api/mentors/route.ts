@@ -7,7 +7,7 @@ export async function GET (request: Request) {
       createdAt: "asc",
     },
     include: {
-      user: true, // Incluye los datos de la tabla user relacionados con cada mentor
+      user: true, // Incluye los datos de la tabla user relacionados con cada asesor
     },
   });
 
@@ -23,33 +23,31 @@ export async function GET (request: Request) {
 
 export async function DELETE (request: Request) {
   const { searchParams } = new URL(request.url);
-  const mentorId = searchParams.get('id'); // Suponemos que pasas el ID del mentor por la URL
+  const mentorId = searchParams.get('id'); // ID del asesor por la URL
 
   if (!mentorId) {
-    return NextResponse.json({ error: "Falta el ID del mentor" }, { status: 400 });
+    return NextResponse.json({ error: "Falta el ID del asesor" }, { status: 400 });
   }
 
   try {
-    // Primero eliminamos la relación en la tabla mentor
     await prisma.mentor.delete({
       where: {
-        userId: mentorId, // Aquí ya no necesitas parseInt, mentorId es string
+        userId: mentorId,
       },
     });
 
-    // Luego actualizamos el roleId a 1 en la tabla user
     await prisma.user.update({
       where: {
-        id: mentorId, // Aquí también se usa el mentorId como string
+        id: mentorId,
       },
       data: {
-        roleId: 1, // Cambiamos a roleId 1 (usuario libre o sin rol)
+        roleId: 1,
       },
     });
 
-    return NextResponse.json({ message: "Mentor eliminado y roleId actualizado a 1" });
+    return NextResponse.json({ message: "Asesor eliminado y roleId actualizado a 1" });
   } catch (error) {
-    console.error("Error al eliminar mentor o actualizar el roleId:", error);
-    return NextResponse.json({ error: "Error al eliminar mentor o actualizar roleId" }, { status: 500 });
+    console.error("Error al eliminar asesor o actualizar el roleId:", error);
+    return NextResponse.json({ error: "Error al eliminar asesor o actualizar roleId" }, { status: 500 });
   }
 }
