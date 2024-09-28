@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -10,8 +11,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import React, { useState } from "react";
 import { toast } from "@/hooks/use-toast";
+import { formatSize } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface FileItem {
   file: File;
@@ -19,23 +30,26 @@ interface FileItem {
 }
 
 export default function FileUploadPage() {
-  const [files, setFiles] = useState<FileItem[]>([]);
+  const [fileItem, setFileItem] = useState<FileItem | null>(null);
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>("");
+  const [openDialog, setOpenDialog] = useState(false); // Controla el diálogo
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newFiles = Array.from(e.target.files || []).map((file) => ({
-      file,
-      progress: 0,
-    }));
-    setFiles((prevFiles) => [...prevFiles, ...newFiles]);
+    const file = e.target.files?.[0] || null;
+    if (file) {
+      setFileItem({
+        file,
+        progress: 0,
+      });
+    }
   };
 
-  const removeFile = (index: number) => {
-    setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
+  const removeFile = () => {
+    setFileItem(null);
   };
 
-  // Función para subir archivos al backend
-  const uploadFile = async (fileItem: FileItem, index: number) => {
+  // Función para subir el archivo al backend
+  const uploadFile = async (replace = false) => {
     if (!selectedDocumentType) {
       toast({
         title: "Error",
@@ -45,16 +59,33 @@ export default function FileUploadPage() {
       return;
     }
 
+    if (!fileItem) {
+      toast({
+        title: "Error",
+        description: "No hay archivo seleccionado para subir.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const formData = new FormData();
     formData.append("file", fileItem.file);
-    formData.append("documentType", selectedDocumentType); // Añadir el tipo de documento
+    formData.append("documentType", selectedDocumentType);
+
+    if (replace) formData.append("replace", "true");
 
     try {
-      // Realiza la solicitud de subida de archivo
       const response = await fetch("/api/document", {
         method: "POST",
         body: formData,
       });
+
+      const result = await response.json();
+
+      if (response.status === 409 && result.replace) {
+        setOpenDialog(true); // Abrir el diálogo cuando el archivo ya existe
+        return;
+      }
 
       if (response.ok) {
         toast({
@@ -62,20 +93,22 @@ export default function FileUploadPage() {
           description: "Archivo subido exitosamente",
         });
 
-        // Simulación de progreso al 100%
         for (let progress = 0; progress <= 100; progress += 10) {
           await new Promise((resolve) => setTimeout(resolve, 200));
-          setFiles((prevFiles) => {
-            const newFiles = [...prevFiles];
-            newFiles[index].progress = progress;
-            return newFiles;
+          setFileItem((prevFileItem) => {
+            if (prevFileItem) {
+              return {
+                ...prevFileItem,
+                progress,
+              };
+            }
+            return prevFileItem;
           });
         }
       } else {
-        const errorData = await response.json();
         toast({
           title: "Error",
-          description: errorData.error || "Error al subir el archivo",
+          description: result.error || "Error al subir el archivo",
           variant: "destructive",
         });
       }
@@ -88,31 +121,10 @@ export default function FileUploadPage() {
     }
   };
 
-  // Subir todos los archivos a la vez
-  const handleSubmitAllFiles = async () => {
-    if (!selectedDocumentType) {
-      toast({
-        title: "Error",
-        description: "Por favor, selecciona un tipo de documento.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (files.length === 0) {
-      toast({
-        title: "Error",
-        description: "No hay archivos seleccionados para subir.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    files.forEach((fileItem, index) => {
-      if (fileItem.progress < 100) {
-        uploadFile(fileItem, index);
-      }
-    });
+  // Función para confirmar el reemplazo del archivo
+  const confirmReplace = async () => {
+    setOpenDialog(false); // Cerrar el diálogo
+    await uploadFile(true); // Reintentar con el reemplazo activado
   };
 
   return (
@@ -132,7 +144,7 @@ export default function FileUploadPage() {
             <SelectGroup>
               <SelectLabel>Tipos de documentos</SelectLabel>
               <SelectItem value="Bitacora">Bitacora</SelectItem>
-              <SelectItem value="Cronograma">Cronograma</SelectItem>
+              <SelectItem value="Rubrica">Rubrica</SelectItem>
               <SelectItem value="Informes">Informes</SelectItem>
               <SelectItem value="Directiva">Directiva</SelectItem>
               <SelectItem value="Otros">Otros</SelectItem>
@@ -143,58 +155,58 @@ export default function FileUploadPage() {
         {/* Botón para seleccionar archivos */}
         <div className="border p-6 rounded-lg w-full max-w-xl flex justify-center mb-4">
           <label htmlFor="file-upload" className="cursor-pointer px-4 py-2">
-            Subir archivos
+            Subir archivo
           </label>
           <input
             id="file-upload"
             type="file"
-            multiple
             onChange={handleFileChange}
             className="hidden"
           />
         </div>
 
-        {/* Mostrar archivos seleccionados y barra de progreso */}
-        <div className="space-y-4 w-full max-w-xl">
-          {files.map((fileItem, index) => (
-            <div key={index} className="relative p-4 border rounded-lg">
-              <div className="flex justify-between items-center">
-                <span>
-                  {fileItem.file.name} (
-                  {(fileItem.file.size / 1024 / 1024).toFixed(2)} MB)
-                </span>
-                <button
-                  onClick={() => removeFile(index)}
-                  className="text-red-500"
-                >
-                  Eliminar
-                </button>
-              </div>
-              <div className="h-2 bg-gray-200 rounded mt-2">
-                <div
-                  className="h-full bg-blue-500 rounded"
-                  style={{ width: `${fileItem.progress}%` }}
-                />
-              </div>
-              {fileItem.progress < 100 && (
-                <button
-                  onClick={() => uploadFile(fileItem, index)}
-                  className="mt-2 p-2 bg-blue-500 text-white rounded"
-                >
-                  Subir
-                </button>
-              )}
+        {/* Mostrar archivo seleccionado y barra de progreso */}
+        {fileItem && (
+          <div className="relative p-4 border rounded-lg space-y-4 w-full max-w-xl">
+            <div className="flex justify-between items-center">
+              <span>
+                {fileItem.file.name} ({formatSize(fileItem.file.size)})
+              </span>
+              <button onClick={removeFile} className="text-red-500">
+                Eliminar
+              </button>
             </div>
-          ))}
-        </div>
+            <div className="h-2 bg-gray-200 rounded mt-2">
+              <div
+                className="h-full bg-blue-500 rounded"
+                style={{ width: `${fileItem.progress}%` }}
+              />
+            </div>
+          </div>
+        )}
 
-        {/* Botón para cargar todos los archivos */}
-        <Button
-          onClick={handleSubmitAllFiles}
-          className="bg-black text-white px-6 py-2 rounded mt-4 mb-4"
-        >
-          Cargar todos los archivos
+        <Button onClick={() => uploadFile()} className="mt-4">
+          Cargar documento
         </Button>
+
+        {/* Alert Dialog para confirmar el reemplazo */}
+        <AlertDialog open={openDialog} onOpenChange={setOpenDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Reemplazar archivo?</AlertDialogTitle>
+              <AlertDialogDescription>
+                El archivo ya existe. Esta acción reemplazará el archivo
+                existente con el nuevo archivo subido.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmReplace}>
+                Reemplazar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
