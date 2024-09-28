@@ -15,8 +15,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Document } from "./document.type";
 import { DataTableColumnHeader } from "@/components/data-table";
+import { formatSize, formatDate } from "@/lib/utils";
 
-export function getColumns(): ColumnDef<Document>[] {
+export function getColumns(
+  handleDelete: (id: number) => void
+): ColumnDef<Document>[] {
   return [
     {
       id: "select",
@@ -65,21 +68,23 @@ export function getColumns(): ColumnDef<Document>[] {
       ),
     },
     {
-      accessorKey: "dateUpload",
+      accessorKey: "uploadDate",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Fecha de subida" />
       ),
-      cell: ({ row }) => (
-        <div className="lowercase px-4">{row.getValue("dateUpload")}</div>
-      ),
+      cell: ({ row }) => {
+        const uploadDate = new Date(row.getValue("uploadDate"));
+        return <div className="lowercase px-2">{formatDate(uploadDate)}</div>;
+      },
     },
     {
       accessorKey: "size",
       header: () => <div className="text-right">Tamaño</div>,
       cell: ({ row }) => {
+        const sizeInBytes: number = row.getValue("size");
         return (
           <div className="text-right font-medium">
-            {row.getValue("size")} MB
+            {formatSize(sizeInBytes)}
           </div>
         );
       },
@@ -102,7 +107,7 @@ export function getColumns(): ColumnDef<Document>[] {
               <DropdownMenuLabel>Acciones</DropdownMenuLabel>
               <DropdownMenuItem
                 className="cursor-pointer"
-                onClick={() => navigator.clipboard.writeText(document.id)}
+                onClick={() => handleDelete(document.id)}
               >
                 Eliminar
               </DropdownMenuItem>

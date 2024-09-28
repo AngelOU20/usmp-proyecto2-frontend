@@ -2,9 +2,6 @@
 
 import * as React from "react";
 
-import { getColumns } from "./user-table-columns";
-import { users as data } from "./user.data";
-
 import {
   ColumnFiltersState,
   SortingState,
@@ -26,18 +23,25 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DataTablePagination, DataTableToolbar } from "@/components/data-table";
-import { DataTableFilterField } from "@/lib/types/data-table.types";
-import { User } from "./user.type";
+import { SimplifiedUser } from "./mentor.type";
+import { ColumnDef } from "@tanstack/react-table";
+import { DataTableFilterField } from "@/types/data-table.types";
 
-const filterFields: DataTableFilterField<User>[] = [
+// Actualiza el UserTable para recibir `data` como prop
+interface UserTableProps {
+  columns: ColumnDef<SimplifiedUser>[];
+  data: SimplifiedUser[];
+}
+
+const filterFields: DataTableFilterField<SimplifiedUser>[] = [
   {
-    label: "Nombre del alumno",
+    label: "Nombre del asesor",
     value: "name",
-    placeholder: "Filtrar por nombre del documento",
+    placeholder: "Filtrar por el nombre",
   },
 ];
 
-export const UserTable = () => {
+export const MentorTable: React.FC<UserTableProps> = ({ columns, data }) => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -45,8 +49,6 @@ export const UserTable = () => {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-
-  const columns = React.useMemo(() => getColumns(), []);
 
   const table = useReactTable({
     data,
@@ -63,7 +65,6 @@ export const UserTable = () => {
       sorting,
       columnFilters,
       columnVisibility,
-      columnPinning: { right: ["actions"] },
       rowSelection,
     },
   });
@@ -78,28 +79,23 @@ export const UserTable = () => {
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
+                <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(

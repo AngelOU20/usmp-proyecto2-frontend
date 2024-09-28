@@ -1,7 +1,7 @@
 export type Document = {
-  id: string;
+  id: number;
   name: string;
   size: number;
-  type: "Bitácora" | "Directiva" | "Cronograma";
-  dateUpload: string;
+  uploadDate: string;
+  type: "Bitacora" | "Cronograma" | "Informes" | "Directiva" | "Otros";
 };
