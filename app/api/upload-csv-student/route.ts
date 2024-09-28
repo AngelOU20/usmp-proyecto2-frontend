@@ -2,7 +2,7 @@ import csv from "csv-parser";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { Readable } from "stream";
-import { Student } from "@/types/student";
+import { Student } from "@/types/user.types";
 
 export async function POST (req: Request) {
   const formData = await req.formData();
