@@ -30,7 +30,7 @@ import { DataTableFilterField, Option } from "@/types/data-table.types";
 // Define las opciones de tipo de documento basadas en el tipo definido
 const fileTypeOptions: Option[] = [
   { label: "Bitácora", value: "Bitacora" },
-  { label: "Cronograma", value: "Cronograma" },
+  { label: "Rubrica", value: "Rubrica" },
   { label: "Informes", value: "Informes" },
   { label: "Directiva", value: "Directiva" },
   { label: "Otros", value: "Otros" },
