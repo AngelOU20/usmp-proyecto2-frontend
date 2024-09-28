@@ -43,14 +43,14 @@ export const routesForMentor = [
     href: "/",
   },
   {
-    icon: BookUser,
-    label: "Gestión de grupos",
-    href: "/student-group",
-  },
-  {
     icon: Upload,
     label: "Subida de archivos",
     href: "/fileupload",
+  },
+  {
+    icon: BookUser,
+    label: "Gestión de grupos",
+    href: "/student-group",
   },
   {
     icon: MessagesSquare,
@@ -65,6 +65,11 @@ export const routesForAuthority = [
     href: "/",
   },
   {
+    icon: Upload,
+    label: "Subida de archivos",
+    href: "/fileupload",
+  },
+  {
     icon: BookUser,
     label: "Gestión de grupos",
     href: "/student-group",
@@ -73,11 +78,6 @@ export const routesForAuthority = [
     icon: User2,
     label: "Gestión de asesores",
     href: "/mentor-management",
-  },
-  {
-    icon: Upload,
-    label: "Subida de archivos",
-    href: "/fileupload",
   },
   {
     icon: MessagesSquare,
@@ -100,9 +100,9 @@ export const routesForSupportSidebar = [
     label: "Configuración",
     href: "/settings",
   },
-  {
-    icon: ShieldCheck,
-    label: "Seguridad",
-    href: "/security",
-  },
+  // {
+  //   icon: ShieldCheck,
+  //   label: "Seguridad",
+  //   href: "/security",
+  // },
 ];
