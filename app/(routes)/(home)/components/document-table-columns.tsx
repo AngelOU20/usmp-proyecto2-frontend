@@ -17,7 +17,9 @@ import { Document } from "./document.type";
 import { DataTableColumnHeader } from "@/components/data-table";
 import { formatSize, formatDate } from "@/lib/utils";
 
-export function getColumns(): ColumnDef<Document>[] {
+export function getColumns(
+  handleDelete: (id: number) => void
+): ColumnDef<Document>[] {
   return [
     {
       id: "select",
@@ -105,9 +107,7 @@ export function getColumns(): ColumnDef<Document>[] {
               <DropdownMenuLabel>Acciones</DropdownMenuLabel>
               <DropdownMenuItem
                 className="cursor-pointer"
-                onClick={() =>
-                  navigator.clipboard.writeText(String(document.id))
-                }
+                onClick={() => handleDelete(document.id)}
               >
                 Eliminar
               </DropdownMenuItem>
