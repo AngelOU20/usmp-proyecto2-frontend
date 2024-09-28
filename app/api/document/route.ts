@@ -12,6 +12,7 @@ export async function POST (req: Request) {
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
   const documentType = formData.get("documentType") as string;
+  const replace = formData.get("replace") as string;
 
   if (!file || !documentType) {
     return NextResponse.json({ error: "Archivo o tipo de documento no proporcionado" }, { status: 400 });
@@ -27,6 +28,30 @@ export async function POST (req: Request) {
 
     if (!documentTypeId) {
       return NextResponse.json({ error: "Tipo de documento no válido" }, { status: 400 });
+    }
+
+    // Verificar si ya existe un documento con el mismo nombre
+    const existingDocument = await prisma.document.findFirst({
+      where: {
+        name: file.name,
+        typeId: documentTypeId.id,
+      },
+    });
+
+    if (existingDocument && !replace) {
+      // El archivo ya existe y no se indicó reemplazo
+      return NextResponse.json({
+        error: "Archivo ya existente",
+        message: "El archivo ya existe. ¿Deseas reemplazarlo?",
+        replace: true // Indicamos al frontend que se puede hacer reemplazo
+      }, { status: 409 });
+    }
+
+    if (existingDocument && replace) {
+      // Si se permite reemplazo, eliminamos el archivo existente
+      await prisma.document.delete({
+        where: { id: existingDocument.id },
+      });
     }
 
     // Guardar el archivo en la base de datos
