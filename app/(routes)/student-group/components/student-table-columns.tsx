@@ -1,5 +1,3 @@
-"use client";
-
 import * as React from "react";
 import { MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,9 +11,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DataTableColumnHeader } from "@/components/data-table";
-import { User } from "./user.type";
+import { Student } from "./student.type";
 
-export function getColumns(): ColumnDef<User>[] {
+export function getColumns(
+  handleDelete: (id: string) => void
+): ColumnDef<Student>[] {
   return [
     {
       id: "select",
@@ -40,7 +40,7 @@ export function getColumns(): ColumnDef<User>[] {
       enableHiding: false,
     },
     {
-      accessorKey: "name",
+      accessorKey: "name", // Coincide con la clave en el JSON
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Alumnos matriculados" />
       ),
@@ -51,38 +51,38 @@ export function getColumns(): ColumnDef<User>[] {
       ),
     },
     {
-      accessorKey: "status",
+      accessorKey: "status", // Coincide con la clave en el JSON
       header: "Estado",
       cell: ({ row }) => (
         <div className="capitalize">{row.getValue("status")}</div>
       ),
     },
     {
-      accessorKey: "number",
-      header: "Número",
+      accessorKey: "registrationNumber", // Coincide con la clave en el JSON
+      header: "Número de matricula",
       cell: ({ row }) => (
-        <div className="lowercase">{row.getValue("number")}</div>
+        <div className="capitalize">{row.getValue("registrationNumber")}</div>
       ),
     },
     {
-      accessorKey: "email",
+      accessorKey: "email", // Coincide con la clave en el JSON
       header: "Email",
       cell: ({ row }) => (
         <div className="lowercase">{row.getValue("email")}</div>
       ),
     },
     {
-      accessorKey: "group",
+      accessorKey: "group", // Coincide con la clave en el JSON
       header: "Grupo",
       cell: ({ row }) => (
         <div className="uppercase">{row.getValue("group")}</div>
       ),
     },
     {
-      accessorKey: "advisor",
+      accessorKey: "mentor", // Coincide con la clave en el JSON
       header: "Asesor",
       cell: ({ row }) => (
-        <div className="capitalize">{row.getValue("advisor")}</div>
+        <div className="capitalize">{row.getValue("mentor")}</div>
       ),
     },
     {
@@ -103,9 +103,9 @@ export function getColumns(): ColumnDef<User>[] {
               <DropdownMenuLabel>Acciones</DropdownMenuLabel>
               <DropdownMenuItem
                 className="cursor-pointer"
-                onClick={() => navigator.clipboard.writeText(String(user.id))}
+                onClick={() => handleDelete(user.id!)}
               >
-                Eliminar
+                Remover estudiante
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

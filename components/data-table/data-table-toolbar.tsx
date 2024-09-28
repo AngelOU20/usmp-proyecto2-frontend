@@ -11,7 +11,7 @@ import {
   DataTableViewOptions,
 } from "@/components/data-table";
 import { X } from "lucide-react";
-import { DataTableFilterField } from "@/lib/types/data-table.types";
+import { DataTableFilterField } from "@/types/data-table.types";
 
 interface DataTableToolbarProps<TData>
   extends React.HTMLAttributes<HTMLDivElement> {
