@@ -13,7 +13,9 @@ import {
 import { DataTableColumnHeader } from "@/components/data-table";
 import { Student } from "./student.type";
 
-export function getColumns(): ColumnDef<Student>[] {
+export function getColumns(
+  handleDelete: (id: string) => void
+): ColumnDef<Student>[] {
   return [
     {
       id: "select",
@@ -101,9 +103,9 @@ export function getColumns(): ColumnDef<Student>[] {
               <DropdownMenuLabel>Acciones</DropdownMenuLabel>
               <DropdownMenuItem
                 className="cursor-pointer"
-                onClick={() => navigator.clipboard.writeText(String(user.id))}
+                onClick={() => handleDelete(user.id!)}
               >
-                Eliminar
+                Remover estudiante
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
