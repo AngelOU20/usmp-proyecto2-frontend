@@ -1,17 +1,48 @@
 "use client";
 
-import { Spinner } from "@/components/spinner";
 import React, { useEffect, useMemo, useState } from "react";
+import { Spinner } from "@/components/spinner";
 import { getColumns } from "./document-table-columns";
 import { DocumentsTable } from "./document-table";
 import { Document } from "./document.type";
+import { toast } from "@/hooks/use-toast";
 
 export const ListDocuments = () => {
   const [documentData, setdocumentData] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const columns = useMemo(() => getColumns(), []);
+  // Función para eliminar el documento (mover por encima de useMemo)
+  const handleDelete = async (id: number) => {
+    try {
+      const response = await fetch(`/api/document?id=${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al eliminar el documento");
+      }
+
+      // Actualizar la lista de documentos eliminando el documento localmente
+      setdocumentData((prevData) => prevData.filter((doc) => doc.id !== id));
+
+      toast({
+        title: "Documento eliminado",
+        description: "El documento ha sido eliminado exitosamente.",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error("Error:", error);
+      toast({
+        title: "Error",
+        description: "Hubo un error al intentar eliminar el documento.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Ahora puedes pasar handleDelete a useMemo
+  const columns = useMemo(() => getColumns(handleDelete), []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -19,14 +50,14 @@ export const ListDocuments = () => {
       try {
         const response = await fetch("/api/document");
         if (!response.ok) {
-          throw new Error("Error fetching mentors");
+          throw new Error("Error fetching documents");
         }
         const data = await response.json();
 
         setdocumentData(data.documents);
         setIsLoading(false); // Finaliza la carga
       } catch (error) {
-        setError("Error al cargar mentores"); // En caso de error
+        setError("Error al cargar los documentos"); // En caso de error
         setIsLoading(false);
       }
     };
