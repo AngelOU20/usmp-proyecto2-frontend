@@ -31,10 +31,21 @@ export async function POST (req: Request) {
   for (const student of students) {
     const { nroMatricula, nombre, correo: email, grupo, correoAsesor, titulo, semestre, asignatura } = student;
 
-    // Valida si el email del estudiante está presente
+    // Validar si el email del estudiante está presente
     if (!email) {
       console.error('El email no está definido para este estudiante:', student);
       continue;
+    }
+
+    // Buscar o crear el semestre
+    let semester = await prisma.semester.findFirst({
+      where: { name: semestre },
+    });
+
+    if (!semester) {
+      semester = await prisma.semester.create({
+        data: { name: semestre },
+      });
     }
 
     // Buscar si el usuario (estudiante) ya existe en la base de datos
@@ -42,10 +53,10 @@ export async function POST (req: Request) {
       where: { email },
     });
 
-    // Lógica para crear o actualizar el usuario si no existe
     let user;
 
     if (!existingUser) {
+      // Crear un nuevo usuario si no existe
       user = await prisma.user.create({
         data: {
           email,
@@ -55,7 +66,7 @@ export async function POST (req: Request) {
         },
       });
     } else {
-      // Si el usuario ya existe, solo actualiza su rol a estudiante si no lo tiene
+      // Si el usuario ya existe, actualizar su rol a estudiante si no lo tiene
       if (existingUser.roleId !== 2) {
         user = await prisma.user.update({
           where: { email },
@@ -76,28 +87,22 @@ export async function POST (req: Request) {
       continue;
     }
 
-    // Buscar o crear el grupo, asignando también la asignatura
+    // Buscar o crear el grupo, asignando también la asignatura y semestre
     let group = await prisma.group.findFirst({
       where: {
         name: grupo,
-        subjectId: subject.id  // Verificar que el grupo sea el correcto dentro de la asignatura
+        subjectId: subject.id,
+        semesterId: semester.id, // Validar el grupo en el semestre correcto
       },
     });
 
     if (!group) {
       group = await prisma.group.create({
-        data: { name: grupo, titleProject: titulo, subjectId: subject.id },
+        data: { name: grupo, titleProject: titulo, subjectId: subject.id, semesterId: semester.id },
       });
     }
 
-    if (group.titleProject !== titulo) {
-      group = await prisma.group.update({
-        where: { id: group.id },
-        data: { titleProject: titulo },
-      });
-    }
-
-    // Asignar asesor al grupo
+    // Asignar el asesor al grupo
     const mentor = await prisma.mentor.findFirst({
       where: {
         user: { email: correoAsesor },
@@ -131,8 +136,6 @@ export async function POST (req: Request) {
       console.log(`La relación entre el mentor y el grupo ya existe.`);
     }
 
-    console.log(`Número de matrícula: ${nroMatricula}`);
-
     // Verificar si el estudiante ya existe en la tabla Student
     const existingStudent = await prisma.student.findUnique({
       where: { userId: user.id },
@@ -145,8 +148,8 @@ export async function POST (req: Request) {
           userId: user.id,
           groupId: group.id,
           subjectId: subject.id, // Vincular el estudiante con la asignatura
+          semesterId: semester.id, // Vincular el estudiante con el semestre
           registrationNumber: nroMatricula,
-          semester: semestre,
         },
       });
     } else {
