@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 // Endpoint para obtener estudiantes con sus datos
 export async function GET (req: NextRequest) {
   try {
-    // Consulta a la base de datos para traer estudiantes con sus mentores, usuarios, grupos y asignaturas
+    // Consulta a la base de datos para traer estudiantes con sus mentores, usuarios, grupos, asignaturas y semestre
     const students = await prisma.student.findMany({
       include: {
         user: true, // Relación con la tabla User para obtener nombre, email, etc.
@@ -20,8 +20,10 @@ export async function GET (req: NextRequest) {
                 },
               },
             },
+            semester: true, // Relación para obtener el semestre del grupo
           },
         },
+        semester: true, // Relación con la tabla Semestre
       },
     });
 
@@ -31,11 +33,12 @@ export async function GET (req: NextRequest) {
       name: student.user.name,
       email: student.user.email,
       phone: student.user.phone || "No disponible",
-      registrationNumber: student.registrationNumber,
+      registrationNumber: student?.registrationNumber || "Sin número de matricula",
       group: student.group?.name || "Sin grupo",
       titleProject: student.group?.titleProject || "Sin proyecto",
       mentor: student.group?.mentors[0]?.mentor?.user.name || "Sin Asesor",
       subject: student.group?.subject?.name || "Sin Asignatura",
+      semester: student.semester?.name || student.group?.semester?.name || "Sin semestre",
       status: "Activo",
     }));
 
