@@ -28,9 +28,8 @@ export async function POST (req: Request) {
       .on("error", reject);
   });
 
-  // Procesar cada estudiante después de que el stream termine
   for (const student of students) {
-    const { email, nombre, grupo, nroMatricula, titulo, correoMentor } = student;
+    const { nroMatricula, nombre, correo: email, grupo, correoAsesor, titulo, semestre, asignatura } = student;
 
     // Valida si el email del estudiante está presente
     if (!email) {
@@ -45,12 +44,13 @@ export async function POST (req: Request) {
 
     // Lógica para crear o actualizar el usuario si no existe
     let user;
+
     if (!existingUser) {
       user = await prisma.user.create({
         data: {
           email,
           name: nombre,
-          phone: null, // Asigna otros campos según sea necesario
+          phone: null,
           roleId: 2, // Rol de estudiante
         },
       });
@@ -59,39 +59,99 @@ export async function POST (req: Request) {
       if (existingUser.roleId !== 2) {
         user = await prisma.user.update({
           where: { email },
-          data: {
-            roleId: 2, // Rol de estudiante
-          },
+          data: { roleId: 2 },
         });
       } else {
         user = existingUser;
       }
     }
 
-    // Buscar el mentor asociado con el correo
+    // Buscar la asignatura
+    const subject = await prisma.subject.findFirst({
+      where: { name: asignatura },
+    });
+
+    if (!subject) {
+      console.error(`Asignatura ${asignatura} no encontrada`);
+      continue;
+    }
+
+    // Buscar o crear el grupo, asignando también la asignatura
+    let group = await prisma.group.findFirst({
+      where: {
+        name: grupo,
+        subjectId: subject.id  // Verificar que el grupo sea el correcto dentro de la asignatura
+      },
+    });
+
+    if (!group) {
+      group = await prisma.group.create({
+        data: { name: grupo, titleProject: titulo, subjectId: subject.id },
+      });
+    }
+
+    if (group.titleProject !== titulo) {
+      group = await prisma.group.update({
+        where: { id: group.id },
+        data: { titleProject: titulo },
+      });
+    }
+
+    // Asignar asesor al grupo
     const mentor = await prisma.mentor.findFirst({
       where: {
-        user: {
-          email: correoMentor, // Cambio de búsqueda por el correo del mentor
-        },
+        user: { email: correoAsesor },
       },
     });
 
     if (!mentor) {
-      console.error(`Mentor con correo ${correoMentor} no encontrado`);
+      console.error(`Asesor con correo ${correoAsesor} no encontrado`);
       continue;
     }
 
-    // Crear el registro en la tabla Student
-    await prisma.student.create({
-      data: {
-        userId: user.id,
-        mentorId: mentor.id,
-        group: grupo,
-        registrationNumber: nroMatricula,
-        titleProject: titulo,
+    // Verificar si ya existe la relación entre asesor y grupo
+    const existingMentorGroup = await prisma.mentorGroup.findUnique({
+      where: {
+        mentorId_groupId: {
+          mentorId: mentor.id,
+          groupId: group.id,
+        },
       },
     });
+
+    if (!existingMentorGroup) {
+      // Si no existe la relación, crearla
+      await prisma.mentorGroup.create({
+        data: {
+          mentorId: mentor.id,
+          groupId: group.id,
+        },
+      });
+    } else {
+      console.log(`La relación entre el mentor y el grupo ya existe.`);
+    }
+
+    console.log(`Número de matrícula: ${nroMatricula}`);
+
+    // Verificar si el estudiante ya existe en la tabla Student
+    const existingStudent = await prisma.student.findUnique({
+      where: { userId: user.id },
+    });
+
+    if (!existingStudent) {
+      // Crear el registro en la tabla Student solo si no existe
+      await prisma.student.create({
+        data: {
+          userId: user.id,
+          groupId: group.id,
+          subjectId: subject.id, // Vincular el estudiante con la asignatura
+          registrationNumber: nroMatricula,
+          semester: semestre,
+        },
+      });
+    } else {
+      console.log(`El estudiante con userId ${user.id} ya existe.`);
+    }
   }
 
   return NextResponse.json({ message: "Archivo subido y procesado con éxito" });
