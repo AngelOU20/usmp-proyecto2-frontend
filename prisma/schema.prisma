@@ -15,7 +15,6 @@ model Role {
   users         User[]   // Relación de uno a muchos con el modelo User
 }
 
-
 model User {
   id            String          @id @default(cuid())
   name          String?
@@ -23,15 +22,15 @@ model User {
   emailVerified DateTime?
   image         String?
   phone         String?         // Número de teléfono opcional
-  roleId        Int?            @default(1)   // Llave foránea a la tabla Role
+  roleId        Int             @default(1)   // Llave foránea a la tabla Role
   
   accounts      Account[]
-  
+  documents     Document[]
   mentor        Mentor?
   student       Student?
   authority     Authority?
   
-  role          Role?            @relation(fields: [roleId], references: [id])
+  role          Role?           @relation(fields: [roleId], references: [id])
 
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
@@ -44,7 +43,7 @@ model Mentor {
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
-  students      Student[]
+  mentorGroups  MentorGroup[]   // Relación de muchos a muchos con grupos
 
   user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -52,15 +51,50 @@ model Mentor {
 model Student {
   id                  Int       @id @default(autoincrement())
   userId              String    @unique // Llave foránea que apunta a User
-  mentorId            Int?      // Campo opcional
-  group               String?    // Grupo del estudiante
-  registrationNumber  String?    // Número de matrícula del estudiante
-  titleProject        String?    // Título del trabajo de investigación
+  groupId             Int? 
+  subjectId           Int?      // Relación con la tabla `Subject`
+
+  registrationNumber  String?   // Número de matrícula del estudiante
+  semester            String?
 
   user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  mentor              Mentor?   @relation(fields: [mentorId], references: [id], onDelete: SetNull)
+  group               Group?    @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  subject             Subject?  @relation(fields: [subjectId], references: [id])
 }
 
+model Group {
+  id            Int             @id @default(autoincrement())
+  name          String          // Nombre o título del grupo
+  titleProject  String?         // Título del trabajo de investigación
+  subjectId     Int             @default(1)
+
+  students      Student[]       // Relación de uno a muchos con estudiantes
+  mentors       MentorGroup[]   // Relación de muchos a muchos con mentores
+  subject       Subject         @relation(fields: [subjectId], references: [id])
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@unique([name, subjectId])
+}
+
+model MentorGroup {
+  mentorId      Int
+  groupId       Int
+
+  mentor        Mentor  @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  group         Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@id([mentorId, groupId])  // Llave primaria compuesta
+}
+
+model Subject {
+  id                  Int       @id @default(autoincrement())
+  name                String
+
+  students            Student[]
+  groups              Group[]
+}
 
 model Authority {
   id            Int             @id @default(autoincrement())
@@ -98,10 +132,12 @@ model Document {
   id              Int       @id @default(autoincrement())
   name            String    // Nombre del documento
   typeId          Int       // Llave foránea que apunta a DocumentType
+  userId          String    // Llave foránea a User
   uploadDate      DateTime  @default(now()) // Fecha de subida
   size            Float     // Tamaño del archivo en bytes
   content         Bytes     // Contenido binario del archivo
-  
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   documentType    DocumentType @relation(fields: [typeId], references: [id])
 }
 
