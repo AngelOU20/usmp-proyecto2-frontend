@@ -24,44 +24,24 @@ interface UserTableProps {
   data: Student[];
 }
 
-// Función para extraer los semestres y grupos únicos
-const getUniqueSemesters = (students: Student[]): string[] => {
-  const semesters = students.map((student) => student.semester);
-  return Array.from(new Set(semesters)).filter((semester) => semester); // Elimina duplicados y nulls
+// Función genérica para obtener valores únicos y generar opciones de filtro
+const getUniqueValues = <T extends keyof Student>(
+  students: Student[],
+  key: T
+) => {
+  const values = students.map((student) => student[key]);
+  return Array.from(new Set(values)).filter((value) => value);
 };
 
-const getUniqueGroups = (students: Student[]): string[] => {
-  const groups = students.map((student) => student.group);
-  return Array.from(new Set(groups)).filter((group) => group);
-};
-
-const getUniqueSubjects = (students: Student[]): string[] => {
-  const subjects = students.map((student) => student.subject);
-  return Array.from(new Set(subjects)).filter((subject) => subject);
-};
-
-// Generar las opciones de filtro dinámicamente para el semestre y grupo
-const generateSemesterFilterOptions = (students: Student[]) => {
-  const semesters = getUniqueSemesters(students);
-  return semesters.map((semester) => ({
-    label: semester,
-    value: semester,
-  }));
-};
-
-const generateGroupFilterOptions = (students: Student[]) => {
-  const groups = getUniqueGroups(students);
-  return groups.map((group) => ({
-    label: group,
-    value: group,
-  }));
-};
-
-const generateSubjectFilterOptions = (students: Student[]) => {
-  const subjects = getUniqueSubjects(students);
-  return subjects.map((subject) => ({
-    label: subject,
-    value: subject,
+// Función genérica para generar opciones de filtro dinámicamente
+const generateFilterOptions = <T extends keyof Student>(
+  students: Student[],
+  key: T
+) => {
+  const uniqueValues = getUniqueValues(students, key);
+  return uniqueValues.map((value) => ({
+    label: String(value), // Convertir a string para usar como etiqueta en los filtros
+    value,
   }));
 };
 
@@ -74,12 +54,12 @@ export const StudentTable: React.FC<UserTableProps> = ({ columns, data }) => {
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  // Generar las opciones de filtro para el semestre
-  const semesterFilterOptions = generateSemesterFilterOptions(data);
+  // Obtener las opciones de filtro para semestre, grupo y asignatura
+  const semesterFilterOptions = generateFilterOptions(data, "semester");
+  const groupFilterOptions = generateFilterOptions(data, "group");
+  const subjectFilterOptions = generateFilterOptions(data, "subject");
 
-  const groupFilterOptions = generateGroupFilterOptions(data);
-
-  const subjectFilterOptions = generateSubjectFilterOptions(data);
+  console.log(data);
 
   const filterFields: DataTableFilterField<Student>[] = [
     {
