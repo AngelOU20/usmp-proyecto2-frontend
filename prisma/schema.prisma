@@ -8,7 +8,7 @@ generator client {
 }
  
 model Role {
-  id            Int      @id @default(autoincrement())  // ID autoincremental
+  id            Int      @id @default(autoincrement())
   name          String   @unique
   description   String?  
 
@@ -53,13 +53,14 @@ model Student {
   userId              String    @unique // Llave foránea que apunta a User
   groupId             Int? 
   subjectId           Int?      // Relación con la tabla `Subject`
+  semesterId          Int       // Relación con la tabla Semestre
 
   registrationNumber  String?   // Número de matrícula del estudiante
-  semester            String?
 
   user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   group               Group?    @relation(fields: [groupId], references: [id], onDelete: SetNull)
   subject             Subject?  @relation(fields: [subjectId], references: [id])
+  semester            Semester  @relation(fields: [semesterId], references: [id])
 }
 
 model Group {
@@ -67,33 +68,43 @@ model Group {
   name          String          // Nombre o título del grupo
   titleProject  String?         // Título del trabajo de investigación
   subjectId     Int             @default(1)
-
-  students      Student[]       // Relación de uno a muchos con estudiantes
-  mentors       MentorGroup[]   // Relación de muchos a muchos con mentores
-  subject       Subject         @relation(fields: [subjectId], references: [id])
+  semesterId    Int             // Relación con la tabla Semestre
 
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
-  @@unique([name, subjectId])
+  students      Student[]       // Relación de uno a muchos con estudiantes
+  mentors       MentorGroup[]   // Relación de muchos a muchos con mentores
+  subject       Subject         @relation(fields: [subjectId], references: [id])
+  semester      Semester        @relation(fields: [semesterId], references: [id])
+
+  @@unique([name, subjectId, semesterId])
 }
 
 model MentorGroup {
   mentorId      Int
   groupId       Int
 
-  mentor        Mentor  @relation(fields: [mentorId], references: [id], onDelete: Cascade)
-  group         Group   @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  mentor        Mentor          @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+  group         Group           @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
-  @@id([mentorId, groupId])  // Llave primaria compuesta
+  @@id([mentorId, groupId])     // Llave primaria compuesta
+}
+
+model Semester {
+  id            Int             @id @default(autoincrement())
+  name          String          @unique // Por ejemplo, "2024-I", "2024-II"
+  
+  students      Student[]       // Relación con estudiantes
+  groups        Group[]         // Relación con grupos
 }
 
 model Subject {
-  id                  Int       @id @default(autoincrement())
-  name                String
+  id            Int             @id @default(autoincrement())
+  name          String
 
-  students            Student[]
-  groups              Group[]
+  students      Student[]
+  groups        Group[]
 }
 
 model Authority {
@@ -129,20 +140,20 @@ model Account {
 }
 
 model Document {
-  id              Int       @id @default(autoincrement())
-  name            String    // Nombre del documento
-  typeId          Int       // Llave foránea que apunta a DocumentType
-  userId          String    // Llave foránea a User
-  uploadDate      DateTime  @default(now()) // Fecha de subida
-  size            Float     // Tamaño del archivo en bytes
-  content         Bytes     // Contenido binario del archivo
+  id              Int           @id @default(autoincrement())
+  name            String        // Nombre del documento
+  typeId          Int           // Llave foránea que apunta a DocumentType
+  userId          String        // Llave foránea a User
+  uploadDate      DateTime      @default(now()) // Fecha de subida
+  size            Float         // Tamaño del archivo en bytes
+  content         Bytes         // Contenido binario del archivo
 
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  documentType    DocumentType @relation(fields: [typeId], references: [id])
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documentType    DocumentType  @relation(fields: [typeId], references: [id])
 }
 
 model DocumentType {
-  id              Int       @id @default(autoincrement())
+  id              Int           @id @default(autoincrement())
   name            String    
 
   documents       Document[]
