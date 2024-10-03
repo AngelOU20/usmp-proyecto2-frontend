@@ -11,20 +11,35 @@ export async function GET (req: NextRequest) {
         group: {
           include: {
             subject: true, // Relación para obtener el nombre de la asignatura
-            mentors: {
+            mentor: {
               include: {
-                mentor: {
-                  include: {
-                    user: true, // Relación para obtener el nombre del mentor
-                  },
-                },
+                user: true, // Relación para obtener el nombre del mentor
               },
             },
             semester: true, // Relación para obtener el semestre del grupo
           },
         },
-        semester: true, // Relación con la tabla Semestre
+        semester: true, // Relación con la tabla Semestre del estudiante
       },
+      orderBy: [
+        {
+          semester: {
+            name: 'asc', // Finalmente ordenar por el semestre del estudiante
+          },
+        },
+        {
+          group: {
+            subject: {
+              name: 'asc', // Luego ordenar por la asignatura
+            },
+          },
+        },
+        {
+          group: {
+            name: 'asc', // Ordenar primero por el nombre del grupo
+          },
+        },
+      ],
     });
 
     // Mapear los datos para que coincidan con lo que espera la tabla
@@ -36,10 +51,10 @@ export async function GET (req: NextRequest) {
       registrationNumber: student?.registrationNumber || "Sin número de matricula",
       group: student.group?.name || "Sin grupo",
       titleProject: student.group?.titleProject || "Sin proyecto",
-      mentor: student.group?.mentors[0]?.mentor?.user.name || "Sin Asesor",
+      mentor: student.group?.mentor?.user?.name || "Sin Asesor",
       subject: student.group?.subject?.name || "Sin Asignatura",
       semester: student.semester?.name || student.group?.semester?.name || "Sin semestre",
-      status: "Activo",
+      status: "Activo", // Esto es un valor fijo por ahora
     }));
 
     // Retornar los datos en formato JSON
