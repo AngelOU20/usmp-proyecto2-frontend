@@ -43,8 +43,8 @@ model Mentor {
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
-  mentorGroups  MentorGroup[]   // Relación de muchos a muchos con grupos
-
+  groups        Group[]         // Relación de uno a muchos con grupos (un mentor puede tener varios grupos)
+  
   user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -69,34 +69,27 @@ model Group {
   titleProject  String?         // Título del trabajo de investigación
   subjectId     Int             @default(1)
   semesterId    Int             // Relación con la tabla Semestre
+  mentorId      Int?            // Relación con Mentor (un asesor por grupo)
 
   createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  updatedAt     DateTime        @default(now())
 
-  students      Student[]       // Relación de uno a muchos con estudiantes
-  mentors       MentorGroup[]   // Relación de muchos a muchos con mentores
+  students      Student[]
+  documents     Document[]
+  mentor        Mentor?         @relation(fields: [mentorId], references: [id], onDelete: SetNull)
   subject       Subject         @relation(fields: [subjectId], references: [id])
   semester      Semester        @relation(fields: [semesterId], references: [id])
 
   @@unique([name, subjectId, semesterId])
 }
 
-model MentorGroup {
-  mentorId      Int
-  groupId       Int
-
-  mentor        Mentor          @relation(fields: [mentorId], references: [id], onDelete: Cascade)
-  group         Group           @relation(fields: [groupId], references: [id], onDelete: Cascade)
-
-  @@id([mentorId, groupId])     // Llave primaria compuesta
-}
-
 model Semester {
   id            Int             @id @default(autoincrement())
-  name          String          @unique // Por ejemplo, "2024-I", "2024-II"
+  name          String          @unique
   
-  students      Student[]       // Relación con estudiantes
-  groups        Group[]         // Relación con grupos
+  students      Student[]
+  groups        Group[]
+  documents     Document[]
 }
 
 model Subject {
@@ -105,6 +98,7 @@ model Subject {
 
   students      Student[]
   groups        Group[]
+  documents     Document[]
 }
 
 model Authority {
@@ -141,16 +135,28 @@ model Account {
 
 model Document {
   id              Int           @id @default(autoincrement())
-  name            String        // Nombre del documento
-  typeId          Int           // Llave foránea que apunta a DocumentType
-  userId          String        // Llave foránea a User
-  uploadDate      DateTime      @default(now()) // Fecha de subida
-  size            Float         // Tamaño del archivo en bytes
-  content         Bytes         // Contenido binario del archivo
+  name            String
+  typeId          Int
+  userId          String
+  groupId         Int?
+  subjectId       Int?
+  semesterId      Int?
+  isGlobal        Boolean        @default(false)
+  
+  uploadDate      DateTime      @default(now())
+  size            Float
+  content         Bytes
 
   user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group           Group?        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  subject         Subject?      @relation(fields: [subjectId], references: [id])
+  semester        Semester?     @relation(fields: [semesterId], references: [id])
   documentType    DocumentType  @relation(fields: [typeId], references: [id])
+
+  @@unique([name, groupId, subjectId, semesterId])  // Asegura que un documento con el mismo nombre no pueda repetirse en el mismo grupo/asignatura/semestre
 }
+
+
 
 model DocumentType {
   id              Int           @id @default(autoincrement())
