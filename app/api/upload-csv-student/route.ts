@@ -102,7 +102,7 @@ export async function POST (req: Request) {
       });
     }
 
-    // Asignar el asesor al grupo
+    // Asignar el asesor al grupo si no tiene uno
     const mentor = await prisma.mentor.findFirst({
       where: {
         user: { email: correoAsesor },
@@ -114,26 +114,14 @@ export async function POST (req: Request) {
       continue;
     }
 
-    // Verificar si ya existe la relación entre asesor y grupo
-    const existingMentorGroup = await prisma.mentorGroup.findUnique({
-      where: {
-        mentorId_groupId: {
-          mentorId: mentor.id,
-          groupId: group.id,
-        },
-      },
-    });
-
-    if (!existingMentorGroup) {
-      // Si no existe la relación, crearla
-      await prisma.mentorGroup.create({
-        data: {
-          mentorId: mentor.id,
-          groupId: group.id,
-        },
+    // Verificar si el grupo ya tiene un mentor asignado
+    if (!group.mentorId) {
+      await prisma.group.update({
+        where: { id: group.id },
+        data: { mentorId: mentor.id },
       });
     } else {
-      console.log(`La relación entre el mentor y el grupo ya existe.`);
+      console.log(`El grupo ${grupo} ya tiene un mentor asignado.`);
     }
 
     // Verificar si el estudiante ya existe en la tabla Student
