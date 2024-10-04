@@ -141,7 +141,7 @@ model Document {
   groupId         Int?
   subjectId       Int?
   semesterId      Int?
-  isGlobal        Boolean        @default(false)
+  isGlobal        Boolean       @default(false)
   
   uploadDate      DateTime      @default(now())
   size            Float
@@ -153,7 +153,7 @@ model Document {
   semester        Semester?     @relation(fields: [semesterId], references: [id])
   documentType    DocumentType  @relation(fields: [typeId], references: [id])
 
-  @@unique([name, groupId, subjectId, semesterId])  // Asegura que un documento con el mismo nombre no pueda repetirse en el mismo grupo/asignatura/semestre
+  @@unique([name, groupId, subjectId, semesterId])
 }
 
 
