@@ -8,43 +8,72 @@ async function convertToBuffer (file: File): Promise<Buffer> {
   return Buffer.from(arrayBuffer);
 }
 
+// Método Post
 export async function POST (req: Request) {
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
   const documentType = formData.get("documentType") as string;
-  let groupId = formData.get("groupId") as string | null;
   const email = formData.get("email") as string;
   const replace = formData.get("replace") as string;
+  let groupId = formData.get("groupId") as string | null;
+  let subjectId: number | null = null;
+  let semesterId: number | null = null;
+  let isGlobal = false; // Por defecto no es global
 
   if (!file || !documentType || !email) {
     return NextResponse.json({ error: "Falta archivo, tipo de documento o usuario" }, { status: 400 });
   }
 
   try {
-    // Buscar el userId y verificar si es estudiante
+    // Buscar el userId por el email
     const user = await prisma.user.findUnique({
       where: { email },
-      include: { student: true }, // Incluye la relación con estudiante
     });
 
     if (!user) {
       return NextResponse.json({ error: "Usuario no encontrado" }, { status: 400 });
     }
 
-    const isStudent = user.student !== null;
+    // Validación para estudiantes (roleId = 2)
+    if (user.roleId === 2) {
+      const student = await prisma.student.findFirst({
+        where: { userId: user.id },
+        include: { group: { include: { subject: true, semester: true } } },
+      });
 
-    // Si el usuario es estudiante, obtener el groupId del estudiante
-    if (isStudent) {
-      if (!user.student?.groupId) {
-        return NextResponse.json({ error: "El estudiante no está asignado a un grupo" }, { status: 400 });
+      if (!student || !student.group) {
+        return NextResponse.json({ error: "Grupo no encontrado para el estudiante" }, { status: 400 });
       }
-      // Asignar el groupId del estudiante
-      groupId = String(user.student.groupId);
+
+      subjectId = student.group.subjectId;
+      semesterId = student.group.semesterId;
+      groupId = String(student.groupId);
     }
 
-    // Si es asesor o rol 4, el groupId debe ser obligatorio
-    if (!groupId && !isStudent) {
-      return NextResponse.json({ error: "Falta el grupo para el asesor o autoridad" }, { status: 400 });
+    // Validación para asesores (roleId = 3)
+    if (user.roleId === 3 && groupId) {
+      const group = await prisma.group.findUnique({
+        where: { id: Number(groupId) },
+        include: { subject: true, semester: true },
+      });
+
+      if (!group) {
+        return NextResponse.json({ error: "Grupo no encontrado para el asesor" }, { status: 400 });
+      }
+
+      subjectId = group.subjectId;
+      semesterId = group.semesterId;
+    }
+
+    // Validación para autoridades (roleId = 4)
+    if (user.roleId === 4) {
+      subjectId = parseInt(formData.get("subjectId") as string, 10);
+      semesterId = parseInt(formData.get("semesterId") as string, 10);
+      isGlobal = true; // Si es autoridad, el archivo es global
+
+      if (!subjectId || !semesterId || isNaN(subjectId) || isNaN(semesterId)) {
+        return NextResponse.json({ error: "Asignatura o semestre no válido o no seleccionado" }, { status: 400 });
+      }
     }
 
     const buffer = await convertToBuffer(file);
@@ -58,12 +87,15 @@ export async function POST (req: Request) {
       return NextResponse.json({ error: "Tipo de documento no válido" }, { status: 400 });
     }
 
-    // Verificar si ya existe un documento con el mismo nombre en ese grupo
+    // Verificar si ya existe un documento con el mismo nombre en ese grupo/asignatura/semestre
     const existingDocument = await prisma.document.findFirst({
       where: {
         name: file.name,
         typeId: documentTypeId.id,
-        groupId: Number(groupId),
+        ...(groupId ? { groupId: Number(groupId) } : {}),  // Solo incluir si groupId existe
+        ...(subjectId ? { subjectId: Number(subjectId) } : {}),  // Solo incluir si subjectId existe
+        ...(semesterId ? { semesterId: Number(semesterId) } : {}),  // Solo incluir si semesterId existe
+        isGlobal,  // Este siempre estará presente porque tiene un valor por defecto
       },
     });
 
@@ -81,15 +113,18 @@ export async function POST (req: Request) {
       });
     }
 
-    // Guardar el archivo con el grupo y el usuario que lo sube
+    // Guardar el archivo con el grupo, asignatura, semestre, globalidad, y el usuario que lo sube
     const document = await prisma.document.create({
       data: {
         name: file.name,
         typeId: documentTypeId.id,
         size: file.size,
         content: buffer,
-        userId: user.id,        // Quién sube el documento
-        groupId: Number(groupId), // Relación con el grupo
+        userId: user.id,
+        groupId: groupId ? Number(groupId) : null,
+        subjectId: subjectId ? Number(subjectId) : null,
+        semesterId: semesterId ? Number(semesterId) : null,
+        isGlobal, // Indicamos si es un documento global
       },
     });
 
@@ -100,8 +135,6 @@ export async function POST (req: Request) {
   }
 }
 
-
-
 // GET: Obtener lista de documentos
 export async function GET (req: Request) {
   const session = await auth();
@@ -111,8 +144,6 @@ export async function GET (req: Request) {
   }
 
   const { email, roleId } = session.user;
-
-  console.log("Viendo la sesion", session);
 
   if (typeof roleId !== "number") {
     return NextResponse.json({ error: "Rol no autorizado" }, { status: 403 });
@@ -147,6 +178,7 @@ export async function GET (req: Request) {
       size: doc.size,
       uploadDate: doc.uploadDate,
       type: doc.documentType.name,
+      isGlobal: doc.isGlobal,
     }));
 
     // Retornar los documentos mapeados
@@ -157,7 +189,7 @@ export async function GET (req: Request) {
   }
 }
 
-// Obtener documentos para el estudiante (solo los de su grupo)
+// Obtener documentos para el estudiante (grupo y globales)
 async function getDocumentsForStudent (email: string) {
   const student = await prisma.student.findFirst({
     where: {
@@ -165,16 +197,29 @@ async function getDocumentsForStudent (email: string) {
     },
     select: {
       groupId: true,
+      group: {
+        select: {
+          subjectId: true,
+          semesterId: true,
+        },
+      },
     },
   });
 
-  if (!student || !student.groupId) {
+  if (!student || !student.groupId || !student.group) {
     throw new Error("No se encontró el estudiante o no tiene un grupo asignado.");
   }
 
   const documents = await prisma.document.findMany({
     where: {
-      groupId: student.groupId,
+      OR: [
+        { groupId: student.groupId },  // Documentos del grupo
+        {
+          isGlobal: true,  // Documentos globales
+          subjectId: student.group.subjectId,
+          semesterId: student.group.semesterId,
+        },
+      ],
     },
     include: {
       documentType: true,
@@ -184,14 +229,20 @@ async function getDocumentsForStudent (email: string) {
   return documents;
 }
 
-// Obtener documentos para el mentor (solo los de los grupos asignados)
+// Obtener documentos para el mentor (grupos asignados y globales)
 async function getDocumentsForMentor (email: string) {
   const mentor = await prisma.mentor.findFirst({
     where: {
       user: { email: email },
     },
     include: {
-      groups: true,
+      groups: {
+        select: {
+          id: true,
+          subjectId: true,
+          semesterId: true,
+        },
+      },
     },
   });
 
@@ -200,10 +251,19 @@ async function getDocumentsForMentor (email: string) {
   }
 
   const groupIds = mentor.groups.map(group => group.id);
+  const subjectIds = mentor.groups.map(group => group.subjectId);
+  const semesterIds = mentor.groups.map(group => group.semesterId);
 
   const documents = await prisma.document.findMany({
     where: {
-      groupId: { in: groupIds },
+      OR: [
+        { groupId: { in: groupIds } },  // Documentos de los grupos del asesor
+        {
+          isGlobal: true,  // Documentos globales
+          subjectId: { in: subjectIds },
+          semesterId: { in: semesterIds },
+        },
+      ],
     },
     include: {
       documentType: true,
@@ -213,7 +273,7 @@ async function getDocumentsForMentor (email: string) {
   return documents;
 }
 
-// Obtener documentos para los usuarios de rol 4 (ver todos los documentos)
+// Obtener documentos para las autoridades (todos los documentos)
 async function getDocumentsForRoleAuthority () {
   const documents = await prisma.document.findMany({
     include: {
@@ -223,6 +283,7 @@ async function getDocumentsForRoleAuthority () {
 
   return documents;
 }
+
 
 // DELETE: Eliminar un documento por ID
 export async function DELETE (req: Request) {
