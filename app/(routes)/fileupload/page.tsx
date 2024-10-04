@@ -26,14 +26,30 @@ import {
 } from "@/components/ui/alert-dialog";
 import { getGroupsByMentor } from "@/actions/getGroupsByMentor";
 import { getDocumentTypes } from "@/actions/getDocumentTypes";
-import { FileItem, Group, TypeDocument } from "@/types/global.types";
+import { getSubjects } from "@/actions/getSubjects";
+import { getSemesters } from "@/actions/getSemesters";
+import {
+  FileItem,
+  Group,
+  TypeDocument,
+  Subject,
+  Semester,
+} from "@/types/global.types";
 
 export default function FileUploadPage() {
   const [fileItem, setFileItem] = useState<FileItem | null>(null);
+
   const [documentTypes, setDocumentTypes] = useState<TypeDocument[]>([]);
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>("");
-  const [groups, setGroups] = useState<Group[]>([]); // Guardar los grupos del asesor
+
+  const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<string>("");
+
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState<string>("");
+
+  const [semesters, setSemesters] = useState<Semester[]>([]);
+  const [selectedSemester, setSelectedSemester] = useState<string>("");
 
   const [openDialog, setOpenDialog] = useState(false);
 
@@ -49,20 +65,7 @@ export default function FileUploadPage() {
     }
   };
 
-  useEffect(() => {
-    async function fetchGroups() {
-      if (session?.user?.roleId === 3 && session.user.email) {
-        try {
-          const groupsData = await getGroupsByMentor(session.user.email); // Pasar el email del mentor
-          setGroups(groupsData);
-        } catch (error) {
-          console.error("Error al obtener los grupos del asesor:", error);
-        }
-      }
-    }
-    fetchGroups();
-  }, [session]);
-
+  // Fetch document types
   useEffect(() => {
     const fetchDocumentTypes = async () => {
       try {
@@ -75,10 +78,43 @@ export default function FileUploadPage() {
     fetchDocumentTypes();
   }, []);
 
+  // Fetch groups for mentor (roleId 3)
+  useEffect(() => {
+    async function fetchGroups() {
+      if (session?.user?.roleId === 3 && session.user.email) {
+        try {
+          const groupsData = await getGroupsByMentor(session.user.email);
+          setGroups(groupsData);
+        } catch (error) {
+          console.error("Error al obtener los grupos del asesor:", error);
+        }
+      }
+    }
+    fetchGroups();
+  }, [session]);
+
+  // Fetch subjects and semesters for authorities (roleId 4)
+  useEffect(() => {
+    if (session?.user?.roleId === 4) {
+      const fetchSubjectsAndSemesters = async () => {
+        try {
+          const subjectsData = await getSubjects();
+          const semestersData = await getSemesters();
+          setSubjects(subjectsData);
+          setSemesters(semestersData);
+        } catch (error) {
+          console.error("Error al obtener asignaturas o semestres:", error);
+        }
+      };
+      fetchSubjectsAndSemesters();
+    }
+  }, [session]);
+
   const removeFile = () => {
     setFileItem(null);
   };
 
+  // Función para subir el archivo
   const uploadFile = async (replace = false) => {
     if (!selectedDocumentType) {
       toast({
@@ -108,13 +144,20 @@ export default function FileUploadPage() {
     }
 
     const formData = new FormData();
-
     formData.append("file", fileItem.file);
     formData.append("documentType", selectedDocumentType);
     formData.append("email", session?.user.email || "");
 
-    if (selectedGroup) {
+    // Para asesores, agregar groupId
+    if (session?.user?.roleId === 3 && selectedGroup) {
       formData.append("groupId", selectedGroup);
+    }
+
+    // Para autoridades, agregar subjectId y semesterId
+    if (session?.user?.roleId === 4 && selectedSubject && selectedSemester) {
+      formData.append("subjectId", selectedSubject);
+      formData.append("semesterId", selectedSemester);
+      formData.append("isGlobal", "true");
     }
 
     if (replace) formData.append("replace", "true");
@@ -128,7 +171,7 @@ export default function FileUploadPage() {
       const result = await response.json();
 
       if (response.status === 409 && result.replace) {
-        setOpenDialog(true); // Abrir el diálogo cuando el archivo ya existe
+        setOpenDialog(true);
         return;
       }
 
@@ -174,6 +217,7 @@ export default function FileUploadPage() {
   return (
     <div className="max-w-6xl mx-auto p-4">
       <h1 className="text-2xl mb-4">Subida de archivos</h1>
+
       <div>
         <label className="mb-2 text-lg">Selecciona un tipo de documento</label>
         <Select
@@ -217,6 +261,54 @@ export default function FileUploadPage() {
               </SelectContent>
             </Select>
           </div>
+        )}
+
+        {session?.user?.roleId === 4 && (
+          <>
+            <div>
+              <label className="mb-2 text-lg">Selecciona una asignatura</label>
+              <Select
+                onValueChange={(value) => setSelectedSubject(value)}
+                value={selectedSubject}
+              >
+                <SelectTrigger className="border p-2 rounded-lg mb-4 max-w-xl">
+                  <SelectValue placeholder="Selecciona una asignatura" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Asignaturas</SelectLabel>
+                    {subjects.map((subject) => (
+                      <SelectItem key={subject.id} value={String(subject.id)}>
+                        {subject.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="mb-2 text-lg">Selecciona un semestre</label>
+              <Select
+                onValueChange={(value) => setSelectedSemester(value)}
+                value={selectedSemester}
+              >
+                <SelectTrigger className="border p-2 rounded-lg mb-4 max-w-xl">
+                  <SelectValue placeholder="Selecciona un semestre" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Semestres</SelectLabel>
+                    {semesters.map((semester) => (
+                      <SelectItem key={semester.id} value={String(semester.id)}>
+                        {semester.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+          </>
         )}
 
         <div className="border p-6 rounded-lg w-full max-w-xl flex justify-center mb-4">
