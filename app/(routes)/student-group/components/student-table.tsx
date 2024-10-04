@@ -59,8 +59,6 @@ export const StudentTable: React.FC<UserTableProps> = ({ columns, data }) => {
   const groupFilterOptions = generateFilterOptions(data, "group");
   const subjectFilterOptions = generateFilterOptions(data, "subject");
 
-  console.log(data);
-
   const filterFields: DataTableFilterField<Student>[] = [
     {
       label: "Nombre del alumno",
