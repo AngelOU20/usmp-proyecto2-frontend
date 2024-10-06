@@ -7,4 +7,6 @@ export type Student = {
   group: string;
   mentor: string;
   status: string;
+  semester: string;
+  subject: string;
 };

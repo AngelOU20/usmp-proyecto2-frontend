@@ -12,7 +12,6 @@ export const ListDocuments = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Función para eliminar el documento (mover por encima de useMemo)
   const handleDelete = async (id: number) => {
     try {
       const response = await fetch(`/api/document?id=${id}`, {
@@ -41,12 +40,11 @@ export const ListDocuments = () => {
     }
   };
 
-  // Ahora puedes pasar handleDelete a useMemo
   const columns = useMemo(() => getColumns(handleDelete), []);
 
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true); // Comienza la carga
+      setIsLoading(true);
       try {
         const response = await fetch("/api/document");
         if (!response.ok) {
@@ -55,9 +53,9 @@ export const ListDocuments = () => {
         const data = await response.json();
 
         setdocumentData(data.documents);
-        setIsLoading(false); // Finaliza la carga
+        setIsLoading(false);
       } catch (error) {
-        setError("Error al cargar los documentos"); // En caso de error
+        setError("Error al cargar los documentos");
         setIsLoading(false);
       }
     };

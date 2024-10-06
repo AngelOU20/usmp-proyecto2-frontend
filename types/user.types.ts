@@ -1,4 +1,3 @@
-// user.ts
 export interface User {
   id: string;
   email: string;
@@ -6,12 +5,13 @@ export interface User {
   roleId: number;
 }
 
-// student.ts
 export interface Student {
-  email: string;
-  nombre: string;
-  grupo: string;
   nroMatricula: string;
+  nombre: string;
+  correo: string;
+  grupo: string;
+  correoAsesor: string;
   titulo: string;
-  correoMentor: string;
+  semestre: string;
+  asignatura: string;
 }
