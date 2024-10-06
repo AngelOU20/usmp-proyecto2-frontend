@@ -13,7 +13,7 @@ export const ListStudents = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchStudents = async () => {
-    setIsLoading(true); // Comienza la carga
+    setIsLoading(true);
     try {
       const response = await fetch("/api/student");
       if (!response.ok) {
@@ -21,14 +21,13 @@ export const ListStudents = () => {
       }
       const data = await response.json();
       setStudentData(data.data);
-      setIsLoading(false); // Finaliza la carga
+      setIsLoading(false);
     } catch (error) {
-      setError("Error al cargar estudiantes"); // En caso de error
+      setError("Error al cargar estudiantes");
       setIsLoading(false);
     }
   };
 
-  // Función para eliminar estudiante
   const handleDelete = async (id: string) => {
     try {
       const response = await fetch(`/api/student?id=${id}`, {
@@ -38,7 +37,6 @@ export const ListStudents = () => {
         throw new Error("Error al eliminar el estudiante");
       }
 
-      // Actualizar la tabla de estudiantes localmente
       await fetchStudents();
 
       toast({

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -23,16 +24,36 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
-interface FileItem {
-  file: File;
-  progress: number;
-}
+import { getGroupsByMentor } from "@/actions/getGroupsByMentor";
+import { getDocumentTypes } from "@/actions/getDocumentTypes";
+import { getSubjects } from "@/actions/getSubjects";
+import { getSemesters } from "@/actions/getSemesters";
+import {
+  FileItem,
+  Group,
+  TypeDocument,
+  Subject,
+  Semester,
+} from "@/types/global.types";
 
 export default function FileUploadPage() {
   const [fileItem, setFileItem] = useState<FileItem | null>(null);
+
+  const [documentTypes, setDocumentTypes] = useState<TypeDocument[]>([]);
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>("");
-  const [openDialog, setOpenDialog] = useState(false); // Controla el diálogo
+
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [selectedGroup, setSelectedGroup] = useState<string>("");
+
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState<string>("");
+
+  const [semesters, setSemesters] = useState<Semester[]>([]);
+  const [selectedSemester, setSelectedSemester] = useState<string>("");
+
+  const [openDialog, setOpenDialog] = useState(false);
+
+  const { data: session, status } = useSession();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
@@ -44,16 +65,70 @@ export default function FileUploadPage() {
     }
   };
 
+  // Fetch document types
+  useEffect(() => {
+    const fetchDocumentTypes = async () => {
+      try {
+        const types = await getDocumentTypes();
+        setDocumentTypes(types);
+      } catch (error) {
+        console.error("Error al obtener los tipos de documentos:", error);
+      }
+    };
+    fetchDocumentTypes();
+  }, []);
+
+  // Fetch groups for mentor
+  useEffect(() => {
+    async function fetchGroups() {
+      if (session?.user?.roleId === 3 && session.user.email) {
+        try {
+          const groupsData = await getGroupsByMentor(session.user.email);
+          setGroups(groupsData);
+        } catch (error) {
+          console.error("Error al obtener los grupos del asesor:", error);
+        }
+      }
+    }
+    fetchGroups();
+  }, [session]);
+
+  // Fetch subjects and semesters for authorities
+  useEffect(() => {
+    if (session?.user?.roleId === 4) {
+      const fetchSubjectsAndSemesters = async () => {
+        try {
+          const subjectsData = await getSubjects();
+          const semestersData = await getSemesters();
+          setSubjects(subjectsData);
+          setSemesters(semestersData);
+        } catch (error) {
+          console.error("Error al obtener asignaturas o semestres:", error);
+        }
+      };
+      fetchSubjectsAndSemesters();
+    }
+  }, [session]);
+
   const removeFile = () => {
     setFileItem(null);
   };
 
-  // Función para subir el archivo al backend
+  // Función para subir el archivo
   const uploadFile = async (replace = false) => {
     if (!selectedDocumentType) {
       toast({
         title: "Error",
         description: "Por favor selecciona un tipo de documento.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (session?.user?.roleId === 3 && !selectedGroup) {
+      toast({
+        title: "Error",
+        description: "Por favor seleccione un grupo.",
         variant: "destructive",
       });
       return;
@@ -71,6 +146,17 @@ export default function FileUploadPage() {
     const formData = new FormData();
     formData.append("file", fileItem.file);
     formData.append("documentType", selectedDocumentType);
+    formData.append("email", session?.user.email || "");
+
+    if (session?.user?.roleId === 3 && selectedGroup) {
+      formData.append("groupId", selectedGroup);
+    }
+
+    if (session?.user?.roleId === 4 && selectedSubject && selectedSemester) {
+      formData.append("subjectId", selectedSubject);
+      formData.append("semesterId", selectedSemester);
+      formData.append("isGlobal", "true");
+    }
 
     if (replace) formData.append("replace", "true");
 
@@ -83,7 +169,7 @@ export default function FileUploadPage() {
       const result = await response.json();
 
       if (response.status === 409 && result.replace) {
-        setOpenDialog(true); // Abrir el diálogo cuando el archivo ya existe
+        setOpenDialog(true);
         return;
       }
 
@@ -121,38 +207,108 @@ export default function FileUploadPage() {
     }
   };
 
-  // Función para confirmar el reemplazo del archivo
   const confirmReplace = async () => {
-    setOpenDialog(false); // Cerrar el diálogo
-    await uploadFile(true); // Reintentar con el reemplazo activado
+    setOpenDialog(false);
+    await uploadFile(true);
   };
 
   return (
     <div className="max-w-6xl mx-auto p-4">
       <h1 className="text-2xl mb-4">Subida de archivos</h1>
+
       <div>
-        {/* Selector del tipo de documento */}
         <label className="mb-2 text-lg">Selecciona un tipo de documento</label>
         <Select
           onValueChange={(value) => setSelectedDocumentType(value)}
           value={selectedDocumentType}
         >
           <SelectTrigger className="border p-2 rounded-lg mb-4 max-w-xl">
-            <SelectValue placeholder="Selecciona..." />
+            <SelectValue placeholder="Selecciona un tipo de documento" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
               <SelectLabel>Tipos de documentos</SelectLabel>
-              <SelectItem value="Bitacora">Bitacora</SelectItem>
-              <SelectItem value="Rubrica">Rubrica</SelectItem>
-              <SelectItem value="Informes">Informes</SelectItem>
-              <SelectItem value="Directiva">Directiva</SelectItem>
-              <SelectItem value="Otros">Otros</SelectItem>
+              {documentTypes.map((type) => (
+                <SelectItem key={type.id} value={type.name}>
+                  {type.name}
+                </SelectItem>
+              ))}
             </SelectGroup>
           </SelectContent>
         </Select>
 
-        {/* Botón para seleccionar archivos */}
+        {session?.user?.roleId === 3 && (
+          <div>
+            <label className="mb-2 text-lg">Selecciona un grupo</label>
+            <Select
+              onValueChange={(value) => setSelectedGroup(value)}
+              value={selectedGroup}
+            >
+              <SelectTrigger className="border p-2 rounded-lg mb-4 max-w-xl">
+                <SelectValue placeholder="Selecciona un grupo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Mis grupos</SelectLabel>
+                  {groups.map((group) => (
+                    <SelectItem key={group.id} value={String(group.id)}>
+                      {group.name} - {group.subject} ({group.semester})
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {session?.user?.roleId === 4 && (
+          <>
+            <div>
+              <label className="mb-2 text-lg">Selecciona una asignatura</label>
+              <Select
+                onValueChange={(value) => setSelectedSubject(value)}
+                value={selectedSubject}
+              >
+                <SelectTrigger className="border p-2 rounded-lg mb-4 max-w-xl">
+                  <SelectValue placeholder="Selecciona una asignatura" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Asignaturas</SelectLabel>
+                    {subjects.map((subject) => (
+                      <SelectItem key={subject.id} value={String(subject.id)}>
+                        {subject.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="mb-2 text-lg">Selecciona un semestre</label>
+              <Select
+                onValueChange={(value) => setSelectedSemester(value)}
+                value={selectedSemester}
+              >
+                <SelectTrigger className="border p-2 rounded-lg mb-4 max-w-xl">
+                  <SelectValue placeholder="Selecciona un semestre" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Semestres</SelectLabel>
+                    {semesters.map((semester) => (
+                      <SelectItem key={semester.id} value={String(semester.id)}>
+                        {semester.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+          </>
+        )}
+
         <div className="border p-6 rounded-lg w-full max-w-xl flex justify-center mb-4">
           <label htmlFor="file-upload" className="cursor-pointer px-4 py-2">
             Subir archivo
@@ -165,7 +321,6 @@ export default function FileUploadPage() {
           />
         </div>
 
-        {/* Mostrar archivo seleccionado y barra de progreso */}
         {fileItem && (
           <div className="relative p-4 border rounded-lg space-y-4 w-full max-w-xl">
             <div className="flex justify-between items-center">
@@ -189,7 +344,6 @@ export default function FileUploadPage() {
           Cargar documento
         </Button>
 
-        {/* Alert Dialog para confirmar el reemplazo */}
         <AlertDialog open={openDialog} onOpenChange={setOpenDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>

@@ -10,6 +10,8 @@ export const users: Student[] = [
     email: "julio_ucharima@usmp.pe",
     group: "G23",
     mentor: "Jose Antonio Wu",
+    semester: "string",
+    subject: "string",
   },
   {
     id: "2",
@@ -20,6 +22,8 @@ export const users: Student[] = [
     email: "sandro_baldera@usmp.pe",
     group: "G09",
     mentor: "Jose Antonio Wu",
+    semester: "string",
+    subject: "string",
   },
   {
     id: "3",
@@ -30,5 +34,7 @@ export const users: Student[] = [
     email: "renato_valer@usmp.pe",
     group: "G23",
     mentor: "Jose Antonio Wu",
+    semester: "string",
+    subject: "string",
   },
 ];

@@ -40,7 +40,7 @@ export function getColumns(
       enableHiding: false,
     },
     {
-      accessorKey: "name", // Coincide con la clave en el JSON
+      accessorKey: "name",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Alumnos matriculados" />
       ),
@@ -51,38 +51,48 @@ export function getColumns(
       ),
     },
     {
-      accessorKey: "status", // Coincide con la clave en el JSON
+      accessorKey: "status",
       header: "Estado",
       cell: ({ row }) => (
         <div className="capitalize">{row.getValue("status")}</div>
       ),
     },
     {
-      accessorKey: "registrationNumber", // Coincide con la clave en el JSON
+      accessorKey: "registrationNumber",
       header: "Número de matricula",
-      cell: ({ row }) => (
-        <div className="capitalize">{row.getValue("registrationNumber")}</div>
-      ),
+      cell: ({ row }) => <div>{row.getValue("registrationNumber")}</div>,
     },
     {
-      accessorKey: "email", // Coincide con la clave en el JSON
+      accessorKey: "email",
       header: "Email",
       cell: ({ row }) => (
         <div className="lowercase">{row.getValue("email")}</div>
       ),
     },
     {
-      accessorKey: "group", // Coincide con la clave en el JSON
+      accessorKey: "group",
       header: "Grupo",
       cell: ({ row }) => (
         <div className="uppercase">{row.getValue("group")}</div>
       ),
     },
     {
-      accessorKey: "mentor", // Coincide con la clave en el JSON
+      accessorKey: "mentor",
       header: "Asesor",
       cell: ({ row }) => (
         <div className="capitalize">{row.getValue("mentor")}</div>
+      ),
+    },
+    {
+      accessorKey: "subject",
+      header: "Asignatura",
+      cell: ({ row }) => <div>{row.getValue("subject")}</div>,
+    },
+    {
+      accessorKey: "semester",
+      header: "Semestre",
+      cell: ({ row }) => (
+        <div className="capitalize">{row.getValue("semester")}</div>
       ),
     },
     {

@@ -4,4 +4,10 @@ export type Document = {
   size: number;
   uploadDate: string;
   type: "Bitacora" | "Cronograma" | "Informes" | "Directiva" | "Otros";
+  isGlobal?: boolean;
+  students: string[];
+  groupName: string;
+  subjectName: string;
+  semesterName: string;
 };
+

@@ -12,7 +12,7 @@ export const ListMentors = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchMentors = async () => {
-    setIsLoading(true); // Comienza la carga
+    setIsLoading(true);
     try {
       const response = await fetch("/api/mentors");
       if (!response.ok) {
@@ -20,14 +20,13 @@ export const ListMentors = () => {
       }
       const data = await response.json();
       setMentorData(data.mentors);
-      setIsLoading(false); // Finaliza la carga
+      setIsLoading(false);
     } catch (error) {
-      setError("Error al cargar mentores"); // En caso de error
+      setError("Error al cargar mentores");
       setIsLoading(false);
     }
   };
 
-  // Función para eliminar mentor
   const handleDelete = async (id: string) => {
     try {
       const response = await fetch(`/api/mentors?id=${id}`, {
@@ -37,8 +36,6 @@ export const ListMentors = () => {
         throw new Error("Error al eliminar el mentor");
       }
 
-      // Actualizar la tabla de mentores localmente
-      // setMentorData((prevData) => prevData.filter((mentor) => mentor.id !== id));
       await fetchMentors();
 
       toast({
