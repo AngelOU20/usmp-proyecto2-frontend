@@ -68,6 +68,32 @@ export function getColumns(
       ),
     },
     {
+      accessorKey: "groupName",
+      header: "Grupo",
+      cell: ({ row }) => (
+        <div className="capitalize">{row.getValue("groupName")}</div>
+      ),
+    },
+    {
+      accessorKey: "subjectName",
+      header: "Asignatura",
+      cell: ({ row }) => (
+        <div className="capitalize">{row.getValue("subjectName")}</div>
+      ),
+    },
+    {
+      accessorKey: "students",
+      header: "Estudiantes",
+      cell: ({ row }) => {
+        const students: string[] = row.getValue("students");
+        return (
+          <div className="capitalize">
+            {students.length > 0 ? students.join(", ") : "Sin estudiantes"}
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: "uploadDate",
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Fecha de subida" />
