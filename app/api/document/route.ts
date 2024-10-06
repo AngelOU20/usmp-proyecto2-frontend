@@ -1,14 +1,10 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { convertToBuffer } from "@/lib/utils";
+import { getDocumentTypeByName, findExistingDocument, createDocument, deleteDocumentById, getDocumentsForStudent, getDocumentsForMentor, getDocumentsForRoleAuthority } from "@/services/document";
+import { prisma } from "@/lib/prisma";
 
-// Función para convertir el archivo a un buffer
-async function convertToBuffer (file: File): Promise<Buffer> {
-  const arrayBuffer = await file.arrayBuffer();
-  return Buffer.from(arrayBuffer);
-}
-
-// Método Post
+// POST: Subir un documento
 export async function POST (req: Request) {
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
@@ -18,7 +14,7 @@ export async function POST (req: Request) {
   let groupId = formData.get("groupId") as string | null;
   let subjectId: number | null = null;
   let semesterId: number | null = null;
-  let isGlobal = false; // Por defecto no es global
+  let isGlobal = false;
 
   if (!file || !documentType || !email) {
     return NextResponse.json({ error: "Falta archivo, tipo de documento o usuario" }, { status: 400 });
@@ -34,42 +30,35 @@ export async function POST (req: Request) {
       return NextResponse.json({ error: "Usuario no encontrado" }, { status: 400 });
     }
 
-    // Validación para estudiantes (roleId = 2)
     if (user.roleId === 2) {
       const student = await prisma.student.findFirst({
         where: { userId: user.id },
         include: { group: { include: { subject: true, semester: true } } },
       });
-
       if (!student || !student.group) {
         return NextResponse.json({ error: "Grupo no encontrado para el estudiante" }, { status: 400 });
       }
-
       subjectId = student.group.subjectId;
       semesterId = student.group.semesterId;
       groupId = String(student.groupId);
     }
 
-    // Validación para asesores (roleId = 3)
     if (user.roleId === 3 && groupId) {
       const group = await prisma.group.findUnique({
         where: { id: Number(groupId) },
         include: { subject: true, semester: true },
       });
-
       if (!group) {
         return NextResponse.json({ error: "Grupo no encontrado para el asesor" }, { status: 400 });
       }
-
       subjectId = group.subjectId;
       semesterId = group.semesterId;
     }
 
-    // Validación para autoridades (roleId = 4)
     if (user.roleId === 4) {
       subjectId = parseInt(formData.get("subjectId") as string, 10);
       semesterId = parseInt(formData.get("semesterId") as string, 10);
-      isGlobal = true; // Si es autoridad, el archivo es global
+      isGlobal = true;
 
       if (!subjectId || !semesterId || isNaN(subjectId) || isNaN(semesterId)) {
         return NextResponse.json({ error: "Asignatura o semestre no válido o no seleccionado" }, { status: 400 });
@@ -77,27 +66,20 @@ export async function POST (req: Request) {
     }
 
     const buffer = await convertToBuffer(file);
-
-    // Buscar el tipo de documento por nombre
-    const documentTypeId = await prisma.documentType.findFirst({
-      where: { name: documentType },
-    });
+    const documentTypeId = await getDocumentTypeByName(documentType);
 
     if (!documentTypeId) {
       return NextResponse.json({ error: "Tipo de documento no válido" }, { status: 400 });
     }
 
-    // Verificar si ya existe un documento con el mismo nombre en ese grupo/asignatura/semestre
-    const existingDocument = await prisma.document.findFirst({
-      where: {
-        name: file.name,
-        typeId: documentTypeId.id,
-        ...(groupId ? { groupId: Number(groupId) } : {}),  // Solo incluir si groupId existe
-        ...(subjectId ? { subjectId: Number(subjectId) } : {}),  // Solo incluir si subjectId existe
-        ...(semesterId ? { semesterId: Number(semesterId) } : {}),  // Solo incluir si semesterId existe
-        isGlobal,  // Este siempre estará presente porque tiene un valor por defecto
-      },
-    });
+    const existingDocument = await findExistingDocument(
+      file.name,
+      documentTypeId.id,
+      groupId ? Number(groupId) : undefined,
+      subjectId ? Number(subjectId) : undefined,
+      semesterId ? Number(semesterId) : undefined,
+      isGlobal
+    );
 
     if (existingDocument && !replace) {
       return NextResponse.json({
@@ -108,24 +90,19 @@ export async function POST (req: Request) {
     }
 
     if (existingDocument && replace) {
-      await prisma.document.delete({
-        where: { id: existingDocument.id },
-      });
+      await deleteDocumentById(existingDocument.id);
     }
 
-    // Guardar el archivo con el grupo, asignatura, semestre, globalidad, y el usuario que lo sube
-    const document = await prisma.document.create({
-      data: {
-        name: file.name,
-        typeId: documentTypeId.id,
-        size: file.size,
-        content: buffer,
-        userId: user.id,
-        groupId: groupId ? Number(groupId) : null,
-        subjectId: subjectId ? Number(subjectId) : null,
-        semesterId: semesterId ? Number(semesterId) : null,
-        isGlobal, // Indicamos si es un documento global
-      },
+    const document = await createDocument({
+      name: file.name,
+      typeId: documentTypeId.id,
+      size: file.size,
+      content: buffer,
+      userId: user.id,
+      groupId: groupId ? Number(groupId) : null,
+      subjectId: subjectId ? Number(subjectId) : null,
+      semesterId: semesterId ? Number(semesterId) : null,
+      isGlobal
     });
 
     return NextResponse.json({ message: "Documento subido exitosamente", document });
@@ -150,16 +127,13 @@ export async function GET (req: Request) {
   }
 
   try {
-    // Mapa de funciones por rol
     const roleActions: Record<number, (email: string) => Promise<any[]>> = {
-      2: getDocumentsForStudent,  // Estudiante
-      3: getDocumentsForMentor,   // Asesor
-      4: getDocumentsForRoleAuthority,  // Usuario rol 4 (ver todos los documentos)
+      2: getDocumentsForStudent,
+      3: getDocumentsForMentor,
+      4: getDocumentsForRoleAuthority,
     };
 
-    // Verifica si existe una función asociada al roleId del usuario
     const action = roleActions[roleId];
-
     if (!action) {
       return NextResponse.json({ error: "Rol no autorizado" }, { status: 403 });
     }
@@ -168,10 +142,7 @@ export async function GET (req: Request) {
       return NextResponse.json({ error: "Correo electrónico no disponible" }, { status: 400 });
     }
 
-    // Ejecuta la función asociada al rol
     const documents = await action(email);
-
-    // Mapeo de la data
     const mappedDocuments = documents.map((doc) => ({
       id: doc.id,
       name: doc.name,
@@ -179,9 +150,12 @@ export async function GET (req: Request) {
       uploadDate: doc.uploadDate,
       type: doc.documentType.name,
       isGlobal: doc.isGlobal,
+      groupName: doc.group ? doc.group.name : "Sin grupo",
+      subjectName: doc.isGlobal ? doc.subject?.name : doc.group?.subject?.name || "Sin asignatura",
+      semesterName: doc.isGlobal ? doc.semester?.name : doc.group?.semester?.name || "Sin semestre",
+      students: doc.group ? doc.group.students.map((student: { user: { name: string; }; }) => student.user.name) : [],
     }));
 
-    // Retornar los documentos mapeados
     return NextResponse.json({ documents: mappedDocuments });
   } catch (error) {
     console.error("Error al obtener documentos:", error);
@@ -189,103 +163,7 @@ export async function GET (req: Request) {
   }
 }
 
-// Obtener documentos para el estudiante (grupo y globales)
-async function getDocumentsForStudent (email: string) {
-  const student = await prisma.student.findFirst({
-    where: {
-      user: { email: email },
-    },
-    select: {
-      groupId: true,
-      group: {
-        select: {
-          subjectId: true,
-          semesterId: true,
-        },
-      },
-    },
-  });
-
-  if (!student || !student.groupId || !student.group) {
-    throw new Error("No se encontró el estudiante o no tiene un grupo asignado.");
-  }
-
-  const documents = await prisma.document.findMany({
-    where: {
-      OR: [
-        { groupId: student.groupId },  // Documentos del grupo
-        {
-          isGlobal: true,  // Documentos globales
-          subjectId: student.group.subjectId,
-          semesterId: student.group.semesterId,
-        },
-      ],
-    },
-    include: {
-      documentType: true,
-    },
-  });
-
-  return documents;
-}
-
-// Obtener documentos para el mentor (grupos asignados y globales)
-async function getDocumentsForMentor (email: string) {
-  const mentor = await prisma.mentor.findFirst({
-    where: {
-      user: { email: email },
-    },
-    include: {
-      groups: {
-        select: {
-          id: true,
-          subjectId: true,
-          semesterId: true,
-        },
-      },
-    },
-  });
-
-  if (!mentor || mentor.groups.length === 0) {
-    throw new Error("No se encontraron grupos para el asesor");
-  }
-
-  const groupIds = mentor.groups.map(group => group.id);
-  const subjectIds = mentor.groups.map(group => group.subjectId);
-  const semesterIds = mentor.groups.map(group => group.semesterId);
-
-  const documents = await prisma.document.findMany({
-    where: {
-      OR: [
-        { groupId: { in: groupIds } },  // Documentos de los grupos del asesor
-        {
-          isGlobal: true,  // Documentos globales
-          subjectId: { in: subjectIds },
-          semesterId: { in: semesterIds },
-        },
-      ],
-    },
-    include: {
-      documentType: true,
-    },
-  });
-
-  return documents;
-}
-
-// Obtener documentos para las autoridades (todos los documentos)
-async function getDocumentsForRoleAuthority () {
-  const documents = await prisma.document.findMany({
-    include: {
-      documentType: true,
-    },
-  });
-
-  return documents;
-}
-
-
-// DELETE: Eliminar un documento por ID
+// DELETE: Eliminar un documento
 export async function DELETE (req: Request) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
@@ -295,11 +173,7 @@ export async function DELETE (req: Request) {
   }
 
   try {
-    // Eliminar el documento por ID
-    const deletedDocument = await prisma.document.delete({
-      where: { id: Number(id) },
-    });
-
+    const deletedDocument = await deleteDocumentById(Number(id));
     return NextResponse.json({ message: "Documento eliminado exitosamente", deletedDocument });
   } catch (error) {
     console.error("Error al eliminar el documento:", error);
