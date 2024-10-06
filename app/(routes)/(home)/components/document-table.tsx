@@ -18,17 +18,9 @@ import { DataTableToolbar } from "@/components/data-table";
 import { Document } from "./document.type";
 import { DataTableFilterField, Option } from "@/types/data-table.types";
 import { DataTable } from "@/components/data-table/data-table";
+import { generateFilterOptions } from "@/lib/utils";
+import { getDocumentTypes } from "@/actions/getDocumentTypes";
 
-// Define las opciones de tipo de documento basadas en el tipo definido
-const fileTypeOptions: Option[] = [
-  { label: "Bitácora", value: "Bitacora" },
-  { label: "Rubrica", value: "Rubrica" },
-  { label: "Informes", value: "Informes" },
-  { label: "Directiva", value: "Directiva" },
-  { label: "Otros", value: "Otros" },
-];
-
-// Actualiza el UserTable para recibir `data` como prop
 interface DocumentTableProps {
   columns: ColumnDef<Document>[];
   data: Document[];
@@ -46,6 +38,32 @@ export const DocumentsTable: React.FC<DocumentTableProps> = ({
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
+  const [documentTypeOptions, setDocumentTypeOptions] = React.useState<
+    Option[]
+  >([]);
+
+  React.useEffect(() => {
+    async function fetchDocumentTypes() {
+      try {
+        const types = await getDocumentTypes();
+        setDocumentTypeOptions(
+          types.map((type) => ({
+            label: type.name,
+            value: type.name,
+          }))
+        );
+      } catch (error) {
+        console.error("Error al obtener los tipos de documentos:", error);
+      }
+    }
+
+    fetchDocumentTypes();
+  }, []);
+
+  // const typeFilterOptions = generateFilterOptions(data, "type");
+  const groupFilterOptions = generateFilterOptions(data, "groupName");
+  const subjectFilterOptions = generateFilterOptions(data, "subjectName");
+
   const filterFields: DataTableFilterField<Document>[] = [
     {
       label: "Nombre del Documento",
@@ -53,9 +71,24 @@ export const DocumentsTable: React.FC<DocumentTableProps> = ({
       placeholder: "Filtrar por nombre del documento",
     },
     {
+      label: "Nombre del estudiante",
+      value: "students",
+      placeholder: "Filtrar por estudiante",
+    },
+    {
       label: "Tipo de documento",
       value: "type",
-      options: fileTypeOptions,
+      options: documentTypeOptions,
+    },
+    {
+      label: "Grupo",
+      value: "groupName",
+      options: groupFilterOptions,
+    },
+    {
+      label: "Asignatura",
+      value: "subjectName",
+      options: subjectFilterOptions,
     },
   ];
 
