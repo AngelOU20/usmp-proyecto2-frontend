@@ -19,7 +19,6 @@ import { ColumnDef } from "@tanstack/react-table";
 import { DataTableFilterField } from "@/types/data-table.types";
 import { DataTable } from "@/components/data-table/data-table";
 
-// Actualiza el UserTable para recibir `data` como prop
 interface UserTableProps {
   columns: ColumnDef<SimplifiedUser>[];
   data: SimplifiedUser[];

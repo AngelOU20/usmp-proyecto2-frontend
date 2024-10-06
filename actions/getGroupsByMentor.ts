@@ -7,7 +7,6 @@ export async function getGroupsByMentor (email: string) {
     throw new Error("El email es requerido");
   }
 
-  // Buscar el mentor basado en el email
   const mentor = await prisma.mentor.findFirst({
     where: {
       user: {
@@ -17,8 +16,8 @@ export async function getGroupsByMentor (email: string) {
     include: {
       groups: {
         include: {
-          subject: true, // Para obtener el nombre de la asignatura
-          semester: true, // Para obtener el semestre
+          subject: true,
+          semester: true,
         },
       },
     },
@@ -28,7 +27,6 @@ export async function getGroupsByMentor (email: string) {
     throw new Error("No se encontraron grupos para el asesor.");
   }
 
-  // Retornamos los grupos del mentor con su asignatura y semestre
   return mentor.groups.map((group) => ({
     id: group.id,
     name: group.name,

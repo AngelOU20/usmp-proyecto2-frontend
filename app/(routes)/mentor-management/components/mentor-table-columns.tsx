@@ -58,9 +58,9 @@ export function getColumns(
       cell: ({ row }) => <div>{row.getValue("email")}</div>,
     },
     {
-      accessorKey: "phone", // Cambia "number" a "phone"
+      accessorKey: "phone",
       header: "Número",
-      cell: ({ row }) => <div>{row.getValue("phone")}</div>, // Usa "phone" aquí
+      cell: ({ row }) => <div>{row.getValue("phone")}</div>,
     },
     {
       id: "actions",

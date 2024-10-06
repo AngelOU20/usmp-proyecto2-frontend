@@ -78,7 +78,7 @@ export default function FileUploadPage() {
     fetchDocumentTypes();
   }, []);
 
-  // Fetch groups for mentor (roleId 3)
+  // Fetch groups for mentor
   useEffect(() => {
     async function fetchGroups() {
       if (session?.user?.roleId === 3 && session.user.email) {
@@ -93,7 +93,7 @@ export default function FileUploadPage() {
     fetchGroups();
   }, [session]);
 
-  // Fetch subjects and semesters for authorities (roleId 4)
+  // Fetch subjects and semesters for authorities
   useEffect(() => {
     if (session?.user?.roleId === 4) {
       const fetchSubjectsAndSemesters = async () => {
@@ -148,12 +148,10 @@ export default function FileUploadPage() {
     formData.append("documentType", selectedDocumentType);
     formData.append("email", session?.user.email || "");
 
-    // Para asesores, agregar groupId
     if (session?.user?.roleId === 3 && selectedGroup) {
       formData.append("groupId", selectedGroup);
     }
 
-    // Para autoridades, agregar subjectId y semesterId
     if (session?.user?.roleId === 4 && selectedSubject && selectedSemester) {
       formData.append("subjectId", selectedSubject);
       formData.append("semesterId", selectedSemester);

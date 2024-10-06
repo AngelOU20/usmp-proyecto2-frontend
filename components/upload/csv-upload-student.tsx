@@ -22,7 +22,7 @@ export const CsvUploaderStudent = () => {
       toast({
         title: "Error",
         description: "Por favor, selecciona un archivo antes de subir.",
-        variant: "destructive", // Muestra el toast como un mensaje de error
+        variant: "destructive",
       });
       return;
     }
@@ -57,7 +57,7 @@ export const CsvUploaderStudent = () => {
       toast({
         title: "Error",
         description: "Hubo un error al intentar subir el archivo.",
-        variant: "destructive", // Muestra el toast como un mensaje de error
+        variant: "destructive",
       });
     } finally {
       setUploading(false);
