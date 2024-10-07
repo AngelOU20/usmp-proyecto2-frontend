@@ -10,7 +10,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "FIA - EPICS",
   description:
-    "Aplicación para el uso de los estudiantes y profesores de la EPICS",
+    "Aplicación para el uso de los estudiantes y profesores de la EPICS de la asignatura de Trabajo de Investigación I y II",
 };
 
 export default function RootLayout({

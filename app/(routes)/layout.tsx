@@ -9,10 +9,10 @@ type LayoutProps = {
 const Homelayout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <div className="flex w-full h-full">
-      <div className="hidden lg:block w-80 h-full lg:fixed">
+      <div className="hidden lg:block w-80 h-full lg:fixed bg-white dark:bg-background z-50">
         <Sidebar />
       </div>
-      <div className="w-full lg:ml-80">
+      <div className="w-full lg:ml-80 overflow-x-auto">
         <Navbar />
         <div
           className="p-6 bg-[#fafbfc] dark:bg-background"

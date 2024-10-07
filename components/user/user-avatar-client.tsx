@@ -18,14 +18,12 @@ export const UserAvatar = () => {
 
   if (status === "loading") {
     return (
-      <div className="flex items-center justify-center w-9 h-9 rounded-full bg-gray-300 animate-pulse">
-        {/* Puedes personalizar este skeleton */}
-      </div>
+      <div className="flex items-center justify-center w-9 h-9 rounded-full bg-gray-300 animate-pulse"></div>
     );
   }
 
   if (!session || !user) {
-    return null; // No renderizar nada si no hay sesión
+    return null;
   }
 
   // Obtener las iniciales del nombre del usuario
@@ -51,7 +49,7 @@ export const UserAvatar = () => {
             style={{
               backgroundColor:
                 "#" + (((1 << 24) * Math.random()) | 0).toString(16),
-            }} // Genera un color aleatorio
+            }}
           >
             <span className="text-white font-medium">
               {getInitials(user.name || "User")}

@@ -28,14 +28,24 @@ export async function POST (req: Request) {
       .on("error", reject);
   });
 
-  // Procesar cada estudiante después de que el stream termine
   for (const student of students) {
-    const { email, nombre, grupo, nroMatricula, titulo, correoMentor } = student;
+    const { nroMatricula, nombre, correo: email, grupo, correoAsesor, titulo, semestre, asignatura } = student;
 
-    // Valida si el email del estudiante está presente
+    // Validar si el email del estudiante está presente
     if (!email) {
       console.error('El email no está definido para este estudiante:', student);
       continue;
+    }
+
+    // Buscar o crear el semestre
+    let semester = await prisma.semester.findFirst({
+      where: { name: semestre },
+    });
+
+    if (!semester) {
+      semester = await prisma.semester.create({
+        data: { name: semestre },
+      });
     }
 
     // Buscar si el usuario (estudiante) ya existe en la base de datos
@@ -43,55 +53,96 @@ export async function POST (req: Request) {
       where: { email },
     });
 
-    // Lógica para crear o actualizar el usuario si no existe
     let user;
+
     if (!existingUser) {
+      // Crear un nuevo usuario si no existe
       user = await prisma.user.create({
         data: {
           email,
           name: nombre,
-          phone: null, // Asigna otros campos según sea necesario
+          phone: null,
           roleId: 2, // Rol de estudiante
         },
       });
     } else {
-      // Si el usuario ya existe, solo actualiza su rol a estudiante si no lo tiene
+      // Si el usuario ya existe, actualizar su rol a estudiante si no lo tiene
       if (existingUser.roleId !== 2) {
         user = await prisma.user.update({
           where: { email },
-          data: {
-            roleId: 2, // Rol de estudiante
-          },
+          data: { roleId: 2 },
         });
       } else {
         user = existingUser;
       }
     }
 
-    // Buscar el mentor asociado con el correo
+    // Buscar la asignatura
+    const subject = await prisma.subject.findFirst({
+      where: { name: asignatura },
+    });
+
+    if (!subject) {
+      console.error(`Asignatura ${asignatura} no encontrada`);
+      continue;
+    }
+
+    // Buscar o crear el grupo, asignando también la asignatura y semestre
+    let group = await prisma.group.findFirst({
+      where: {
+        name: grupo,
+        subjectId: subject.id,
+        semesterId: semester.id, // Validar el grupo en el semestre correcto
+      },
+    });
+
+    if (!group) {
+      group = await prisma.group.create({
+        data: { name: grupo, titleProject: titulo, subjectId: subject.id, semesterId: semester.id },
+      });
+    }
+
+    // Asignar el asesor al grupo si no tiene uno
     const mentor = await prisma.mentor.findFirst({
       where: {
-        user: {
-          email: correoMentor, // Cambio de búsqueda por el correo del mentor
-        },
+        user: { email: correoAsesor },
       },
     });
 
     if (!mentor) {
-      console.error(`Mentor con correo ${correoMentor} no encontrado`);
+      console.error(`Asesor con correo ${correoAsesor} no encontrado`);
       continue;
     }
 
-    // Crear el registro en la tabla Student
-    await prisma.student.create({
-      data: {
-        userId: user.id,
-        mentorId: mentor.id,
-        group: grupo,
-        registrationNumber: nroMatricula,
-        titleProject: titulo,
-      },
+    // Verificar si el grupo ya tiene un mentor asignado
+    if (!group.mentorId) {
+      await prisma.group.update({
+        where: { id: group.id },
+        data: { mentorId: mentor.id },
+      });
+    } else {
+      console.log(`El grupo ${grupo} ya tiene un mentor asignado.`);
+    }
+
+    // Verificar si el estudiante ya existe en la tabla Student
+    const existingStudent = await prisma.student.findUnique({
+      where: { userId: user.id },
     });
+
+    if (!existingStudent) {
+      // Crear el registro en la tabla Student solo si no existe
+      await prisma.student.create({
+        data: {
+          userId: user.id,
+          groupId: group.id,
+          subjectId: subject.id, // Vincular el estudiante con la asignatura
+          semesterId: semester.id, // Vincular el estudiante con el semestre
+          registrationNumber: nroMatricula,
+        },
+      });
+    } else {
+      console.log(`El estudiante con userId ${user.id} ya existe.`);
+    }
   }
 
   return NextResponse.json({ message: "Archivo subido y procesado con éxito" });
