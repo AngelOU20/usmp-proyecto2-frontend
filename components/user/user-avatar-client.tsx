@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useSession, signOut } from "next-auth/react";
 import {
   DropdownMenu,
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { LogOut, Settings, User } from "lucide-react";
+import { getColorFromName, getInitials } from "@/lib/utils";
 
 export const UserAvatar = () => {
   const { data: session, status } = useSession();
@@ -26,16 +28,6 @@ export const UserAvatar = () => {
     return null;
   }
 
-  // Obtener las iniciales del nombre del usuario
-  const getInitials = (name: string): string => {
-    const names = name.split(" ");
-    const initials = names
-      .map((n) => n[0])
-      .join("")
-      .substring(0, 2);
-    return initials.toUpperCase();
-  };
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -44,17 +36,26 @@ export const UserAvatar = () => {
           size="icon"
           className="overflow-hidden rounded-full"
         >
-          <div
-            className="flex items-center justify-center w-9 h-9 rounded-full"
-            style={{
-              backgroundColor:
-                "#" + (((1 << 24) * Math.random()) | 0).toString(16),
-            }}
-          >
-            <span className="text-white font-medium">
-              {getInitials(user.name || "User")}
-            </span>
-          </div>
+          {user.image ? (
+            <Image
+              src={user.image}
+              alt="User Avatar"
+              width={36}
+              height={36}
+              className="w-9 h-9 rounded-full object-cover"
+            />
+          ) : (
+            <div
+              className="flex items-center justify-center w-9 h-9 rounded-full"
+              style={{
+                backgroundColor: getColorFromName(user.name || "User"),
+              }}
+            >
+              <span className="text-white font-medium">
+                {getInitials(user.name || "User")}
+              </span>
+            </div>
+          )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
