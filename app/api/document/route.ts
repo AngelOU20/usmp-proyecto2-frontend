@@ -157,8 +157,15 @@ export async function GET (req: Request) {
     }));
 
     return NextResponse.json({ documents: mappedDocuments });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error al obtener documentos:", error);
+
+    // Manejamos el error específico cuando no se encontraron grupos
+    if (error.message === "No se encontraron grupos para el asesor") {
+      return NextResponse.json({ error: "No se encontraron grupos para el asesor" }, { status: 404 });
+    }
+
+    // Otros errores generales
     return NextResponse.json({ error: "Error al obtener los documentos" }, { status: 500 });
   }
 }
