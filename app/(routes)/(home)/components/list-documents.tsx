@@ -8,9 +8,9 @@ import { Document } from "./document.type";
 import { toast } from "@/hooks/use-toast";
 
 export const ListDocuments = () => {
-  const [documentData, setdocumentData] = useState<Document[]>([]);
+  const [documentData, setDocumentData] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleDelete = async (id: number) => {
     try {
@@ -23,7 +23,7 @@ export const ListDocuments = () => {
       }
 
       // Actualizar la lista de documentos eliminando el documento localmente
-      setdocumentData((prevData) => prevData.filter((doc) => doc.id !== id));
+      setDocumentData((prevData) => prevData.filter((doc) => doc.id !== id));
 
       toast({
         title: "Documento eliminado",
@@ -45,17 +45,25 @@ export const ListDocuments = () => {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
+      setErrorMessage(null);
+
       try {
         const response = await fetch("/api/document");
-        if (!response.ok) {
-          throw new Error("Error fetching documents");
-        }
         const data = await response.json();
 
-        setdocumentData(data.documents);
-        setIsLoading(false);
+        if (response.ok) {
+          setDocumentData(data.documents);
+        } else {
+          if (data.error === "No se encontraron grupos para el asesor") {
+            setErrorMessage("No tienes grupos asignados.");
+          } else {
+            setErrorMessage("Hubo un error al cargar los documentos.");
+          }
+        }
       } catch (error) {
-        setError("Error al cargar los documentos");
+        console.error("Error de conexión:", error);
+        setErrorMessage("Error de conexión. Inténtalo de nuevo más tarde.");
+      } finally {
         setIsLoading(false);
       }
     };
@@ -71,13 +79,16 @@ export const ListDocuments = () => {
     );
   }
 
-  if (error) {
-    return <div>Error: {error}</div>;
+  if (errorMessage) {
+    return (
+      <div className="w-full flex justify-center items-center text-red-500">
+        {errorMessage}
+      </div>
+    );
   }
 
   return (
     <>
-      {/* <pre>{JSON.stringify(documentData, null, 2)}</pre> */}
       <DocumentsTable columns={columns} data={documentData} />
     </>
   );

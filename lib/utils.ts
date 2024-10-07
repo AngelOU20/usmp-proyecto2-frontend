@@ -1,3 +1,4 @@
+import { colors } from "@/constants/color";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -72,4 +73,30 @@ export const generateFilterOptions = <T, K extends keyof T> (items: T[], key: K)
     label: String(value), // Convertimos el valor a string para la etiqueta del filtro
     value,
   }));
+};
+
+/**
+ * Obtener las iniciales del nombre del usuario
+ * @param name - Nombre completo del usuario
+ * @returns Las iniciales del nombre
+ */
+export const getInitials = (name: string): string => {
+  const names = name.split(" ");
+  const initials = names
+    .map((n) => n[0])
+    .join("")
+    .substring(0, 2);
+  return initials.toUpperCase();
+};
+
+/**
+ * Obtener un color basado en el nombre del usuario
+ * @param name - Nombre del usuario
+ * @returns Un color en formato hexadecimal
+ */
+export const getColorFromName = (name: string): string => {
+  const charCodeSum = name
+    .split("")
+    .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return colors[charCodeSum % colors.length];
 };
