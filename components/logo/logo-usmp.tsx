@@ -8,12 +8,12 @@ import { useEffect, useState } from "react";
 export const Logo = () => {
   const router = useRouter();
   const { theme, resolvedTheme } = useTheme();
-  const [logoSrc, setLogoSrc] = useState("/temp-logo-fia.png");
+  const [logoSrc, setLogoSrc] = useState("/temp-logo-fia.webp");
 
   useEffect(() => {
     const currentTheme = theme === "system" ? resolvedTheme : theme;
     setLogoSrc(
-      currentTheme === "dark" ? "/logo-fia-white.png" : "/temp-logo-fia.png"
+      currentTheme === "dark" ? "/logo-fia-white.webp" : "/temp-logo-fia.webp"
     );
   }, [theme, resolvedTheme]);
 
