@@ -18,8 +18,8 @@ export async function getChunkedDocsFromUploadedPDFs (
     const flatDocs = flattenDeep(docList);
 
     const textSplitter = new RecursiveCharacterTextSplitter({
-      chunkSize: 1000,
-      chunkOverlap: 200,
+      chunkSize: 4000,
+      chunkOverlap: 800,
     });
 
     const chunkedDocs = await textSplitter.splitDocuments(flatDocs);
