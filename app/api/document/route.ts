@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { convertToBuffer } from "@/lib/utils";
 import { getDocumentTypeByName, findExistingDocument, createDocument, deleteDocumentById, getDocumentsForStudent, getDocumentsForMentor, getDocumentsForRoleAuthority } from "@/services/document";
 import { prisma } from "@/lib/prisma";
+import { saveOnPinecone } from "@/services/pinecone";
 
 // POST: Subir un documento
 export async function POST (req: Request) {
@@ -104,6 +105,8 @@ export async function POST (req: Request) {
       semesterId: semesterId ? Number(semesterId) : null,
       isGlobal
     });
+
+    await saveOnPinecone([file]);
 
     return NextResponse.json({ message: "Documento subido exitosamente", document });
   } catch (error) {
