@@ -8,11 +8,11 @@ generator client {
 }
  
 model Role {
-  id            Int      @id @default(autoincrement())
-  name          String   @unique
+  id            Int             @id @default(autoincrement())
+  name          String          @unique
   description   String?  
 
-  users         User[]   // Relación de uno a muchos con el modelo User
+  users         User[]          // Relación de uno a muchos con el modelo User
 }
 
 model User {
@@ -54,8 +54,8 @@ model Student {
   groupId             Int? 
   subjectId           Int?      // Relación con la tabla `Subject`
   semesterId          Int       // Relación con la tabla Semestre
-
   registrationNumber  String?   // Número de matrícula del estudiante
+  isActive            Boolean   @default(true)
 
   user                User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   group               Group?    @relation(fields: [groupId], references: [id], onDelete: SetNull)
@@ -145,7 +145,8 @@ model Document {
   
   uploadDate      DateTime      @default(now())
   size            Float
-  content         Bytes
+  content         Bytes         // Archivo almacenado en formato binario
+  extractedText   String?       // Campo para almacenar el texto extraído del archivo
 
   user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   group           Group?        @relation(fields: [groupId], references: [id], onDelete: Cascade)
@@ -155,8 +156,6 @@ model Document {
 
   @@unique([name, groupId, subjectId, semesterId])
 }
-
-
 
 model DocumentType {
   id              Int           @id @default(autoincrement())

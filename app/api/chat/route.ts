@@ -1,53 +1,53 @@
-import {
-  StreamingTextResponse,
-  createStreamDataTransformer
-} from 'ai';
-import { ChatOpenAI } from '@langchain/openai';
-import { PromptTemplate } from '@langchain/core/prompts';
-import { HttpResponseOutputParser } from 'langchain/output_parsers';
+import logger from "@/services/logger";
+import type { Message } from "ai";
+import { type NextRequest, NextResponse } from "next/server";
+import { callChain } from "@/services/langchain";
 
-export const dynamic = 'force-dynamic';
+// Función para formatear los mensajes
+const formatMessage = (message: Message) => {
+  return `${message.role === "user" ? "Human" : "Assistant"}: ${message.content
+    }`;
+};
 
-export async function POST (req: Request) {
+export async function POST (req: NextRequest) {
+  const body = await req.json();
+
+  const messages: Message[] = body.messages ?? [];
+  logger.info("Messages ", messages);
+
+  const formattedPreviousMessages = messages.slice(0, -1).map(formatMessage);
+  const question = messages[messages.length - 1].content;
+
+  logger.info("Chat history ", formattedPreviousMessages.join("\n"));
+
+  if (!question) {
+    return NextResponse.json(
+      {
+        error: "Bad Request",
+        reason: "No question provided",
+      },
+      {
+        status: 400,
+      },
+    );
+  }
+
   try {
-    // Extract the `messages` from the body of the request
-    const { messages } = await req.json();
-    const message = messages.at(-1).content;
-
-    const prompt = PromptTemplate.fromTemplate("{message}");
-
-    const model = new ChatOpenAI({
-      apiKey: process.env.OPENAI_API_KEY!,
-      model: 'gpt-3.5-turbo',
-      temperature: 0.2,
+    const streamingTextResponse = callChain({
+      question,
+      chatHistory: formattedPreviousMessages.join("\n"),
     });
 
-    /**
-   * Chat models stream message chunks rather than bytes, so this
-   * output parser handles serialization and encoding.
-   */
-    const parser = new HttpResponseOutputParser();
-
-    const chain = prompt.pipe(model).pipe(parser);
-
-    // Convert the response into a friendly text-stream
-    const stream = await chain.stream({ message });
-
-    //const decoder = new TextDecoder()
-
-    // Each chunk has the same interface as a chat message
-    // for await (const chunk of stream) {
-    //     //console.log(chunk?.content);
-    //     if (chunk) {
-    //         console.log(decoder.decode(chunk))
-    //     }
-    // }
-
-    // Respond with the stream
-    return new StreamingTextResponse(
-      stream.pipeThrough(createStreamDataTransformer()),
+    return streamingTextResponse;
+  } catch (error) {
+    console.error("Internal server error ", error);
+    return NextResponse.json(
+      {
+        error: "Error: Something went wrong. Try again!",
+      },
+      {
+        status: 500,
+      },
     );
-  } catch (e: any) {
-    return Response.json({ error: e.message }, { status: e.status ?? 500 });
   }
 }

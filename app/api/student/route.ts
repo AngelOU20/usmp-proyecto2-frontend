@@ -6,6 +6,9 @@ export async function GET (req: NextRequest) {
   try {
     // Consulta a la base de datos para traer estudiantes con sus mentores, usuarios, grupos, asignaturas y semestre
     const students = await prisma.student.findMany({
+      where: {
+        isActive: true,
+      },
       include: {
         user: true, // Relación con la tabla User para obtener nombre, email, etc.
         group: {
@@ -48,13 +51,13 @@ export async function GET (req: NextRequest) {
       name: student.user.name,
       email: student.user.email,
       phone: student.user.phone || "No disponible",
+      status: student.isActive ? "Activo" : "Inactivo",
       registrationNumber: student?.registrationNumber || "Sin número de matricula",
       group: student.group?.name || "Sin grupo",
       titleProject: student.group?.titleProject || "Sin proyecto",
       mentor: student.group?.mentor?.user?.name || "Sin Asesor",
       subject: student.group?.subject?.name || "Sin Asignatura",
       semester: student.semester?.name || student.group?.semester?.name || "Sin semestre",
-      status: "Activo", // Esto es un valor fijo por ahora
     }));
 
     // Retornar los datos en formato JSON
@@ -75,11 +78,13 @@ export async function DELETE (req: NextRequest) {
   }
 
   try {
-    // Eliminar el registro del estudiante
-    await prisma.student.delete({
+    await prisma.student.update({
       where: {
         userId: studentId,
       },
+      data: {
+        isActive: false,
+      }
     });
 
     // Actualizar el roleId del usuario a '1' (asumido como 'Agente Libre')
