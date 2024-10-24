@@ -9,7 +9,9 @@ export default function Home() {
 
   return (
     <main className="relative container flex flex-col">
-      <h1 className="text-3xl font-bold text-center py-4">AI PDF Chat</h1>
+      <h1 className="text-3xl font-bold text-center py-4">
+        USMP GPT - Proyecto I y II
+      </h1>
 
       <div className="flex flex-1 py-4">
         <div className="w-full">
