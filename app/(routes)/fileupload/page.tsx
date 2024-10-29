@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Spinner } from "@/components/spinner";
 import { toast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -18,6 +20,7 @@ import { getGroupsByMentor } from "@/actions/getGroupsByMentor";
 import { getDocumentTypes } from "@/actions/getDocumentTypes";
 import { getSubjects } from "@/actions/getSubjects";
 import { getSemesters } from "@/actions/getSemesters";
+import { getGroups } from "@/actions/getGroups";
 import {
   FileItem,
   Group,
@@ -34,14 +37,20 @@ import { FileItemDisplay } from "./components/file-item-display";
 
 export default function FileUploadPage() {
   const [fileItem, setFileItem] = useState<FileItem | null>(null);
+
   const [documentTypes, setDocumentTypes] = useState<TypeDocument[]>([]);
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>("");
+
   const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<string>("");
+
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<string>("");
+
   const [semesters, setSemesters] = useState<Semester[]>([]);
   const [selectedSemester, setSelectedSemester] = useState<string>("");
+
+  const [isGlobal, setIsGlobal] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { data: session, status } = useSession();
@@ -50,7 +59,6 @@ export default function FileUploadPage() {
     setFileItem(file);
   };
 
-  // Fetch document types
   useEffect(() => {
     const fetchDocumentTypes = async () => {
       try {
@@ -63,7 +71,6 @@ export default function FileUploadPage() {
     fetchDocumentTypes();
   }, []);
 
-  // Fetch groups for mentor
   useEffect(() => {
     async function fetchGroups() {
       if (session?.user?.roleId === 3 && session.user.email) {
@@ -74,11 +81,19 @@ export default function FileUploadPage() {
           console.error("Error al obtener los grupos del asesor:", error);
         }
       }
+
+      if (session?.user?.roleId === 4) {
+        try {
+          const groupsData = await getGroups();
+          setGroups(groupsData);
+        } catch (error) {
+          console.error("Error al obtener los grupos del asesor:", error);
+        }
+      }
     }
     fetchGroups();
   }, [session]);
 
-  // Fetch subjects and semesters for authorities
   useEffect(() => {
     if (session?.user?.roleId === 4) {
       const fetchSubjectsAndSemesters = async () => {
@@ -143,10 +158,14 @@ export default function FileUploadPage() {
       formData.append("groupId", selectedGroup);
     }
 
-    if (session?.user?.roleId === 4 && selectedSubject && selectedSemester) {
-      formData.append("subjectId", selectedSubject);
-      formData.append("semesterId", selectedSemester);
-      formData.append("isGlobal", "true");
+    if (session?.user?.roleId === 4) {
+      if (isGlobal && selectedSubject && selectedSemester) {
+        formData.append("subjectId", selectedSubject);
+        formData.append("semesterId", selectedSemester);
+        formData.append("isGlobal", "true");
+      } else if (!isGlobal && selectedGroup) {
+        formData.append("groupId", selectedGroup);
+      }
     }
 
     if (replace) formData.append("replace", "true");
@@ -206,6 +225,14 @@ export default function FileUploadPage() {
     await uploadFile(true);
   };
 
+  if (status === "loading") {
+    return (
+      <div className="max-w-6xl mx-auto p-4">
+        <Spinner />
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-6xl mx-auto p-4">
       <h1 className="text-2xl mb-4">Subida de archivos</h1>
@@ -216,6 +243,27 @@ export default function FileUploadPage() {
         setSelectedDocumentType={setSelectedDocumentType}
       />
 
+      {/* Checkbox para Archivo Global */}
+      {session?.user?.roleId === 4 && (
+        <div className="flex items-center gap-x-2 mb-4">
+          <Checkbox
+            checked={isGlobal}
+            onCheckedChange={(checked) => setIsGlobal(!!checked)}
+          />
+          <label className="flex items-center space-x-2">
+            <span>Archivo Global</span>
+          </label>
+        </div>
+      )}
+
+      {!isGlobal && session?.user?.roleId === 4 && (
+        <GroupSelector
+          groups={groups}
+          selectedGroup={selectedGroup}
+          setSelectedGroup={setSelectedGroup}
+        />
+      )}
+
       {session?.user?.roleId === 3 && (
         <GroupSelector
           groups={groups}
@@ -224,7 +272,7 @@ export default function FileUploadPage() {
         />
       )}
 
-      {session?.user?.roleId === 4 && (
+      {isGlobal && session?.user?.roleId === 4 && (
         <SubjectSemesterSelector
           subjects={subjects}
           semesters={semesters}
@@ -242,10 +290,10 @@ export default function FileUploadPage() {
       <Button
         onClick={() => uploadFile()}
         className="mt-4"
-        disabled={isLoading} // Desactivar el botón cuando isLoading es true
+        disabled={isLoading}
       >
         {isLoading ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> // Spinner dentro del botón
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         ) : (
           "Cargar documento"
         )}

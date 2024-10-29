@@ -32,10 +32,24 @@ export async function POST (req: NextRequest) {
     );
   }
 
+  // Definir un índice basado en palabras clave encontradas en la pregunta
+  let indexName = "otros"; // Establece "otros" como el índice por defecto
+
+  if (question.includes("rúbrica")) {
+    indexName = "rubrica";
+  } else if (question.includes("informe")) {
+    indexName = "informe";
+  } else if (question.includes("bitácora")) {
+    indexName = "bitacora";
+  } else if (question.includes("directiva")) {
+    indexName = "directiva";
+  }
+
   try {
     const streamingTextResponse = callChain({
       question,
       chatHistory: formattedPreviousMessages.join("\n"),
+      indexName,
     });
 
     return streamingTextResponse;

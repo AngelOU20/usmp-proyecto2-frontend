@@ -25,7 +25,7 @@ export async function POST (req: NextRequest) {
   }
 
   try {
-    await saveOnPinecone(files);
+    // await saveOnPinecone(files);
 
     return NextResponse.json({
       status: 200,
@@ -43,15 +43,15 @@ export async function POST (req: NextRequest) {
   }
 }
 
-const saveOnPinecone = async (files: File[]) => {
-  try {
-    // Cargar los archivos PDF completos sin dividirlos en chunks
-    const docs = await loadPDFsAsDocuments(files);  // Nueva función para cargar PDFs completos
+// const saveOnPinecone = async (files: File[]) => {
+//   try {
+//     // Cargar los archivos PDF completos sin dividirlos en chunks
+//     const docs = await loadPDFsAsDocuments(files);  // Nueva función para cargar PDFs completos
 
-    // Almacenar los documentos directamente en Pinecone
-    await embedAndStoreDocs(docs);
-    logger.info("Data embedded and stored in Pinecone successfully.");
-  } catch (error) {
-    console.error("saveOnPinecone failed ", error);
-  }
-};
+//     // Almacenar los documentos directamente en Pinecone
+//     await embedAndStoreDocs(docs);
+//     logger.info("Data embedded and stored in Pinecone successfully.");
+//   } catch (error) {
+//     console.error("saveOnPinecone failed ", error);
+//   }
+// };
