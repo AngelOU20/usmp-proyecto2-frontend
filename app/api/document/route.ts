@@ -15,7 +15,7 @@ export async function POST (req: Request) {
   let groupId = formData.get("groupId") as string | null;
   let subjectId: number | null = null;
   let semesterId: number | null = null;
-  let isGlobal = false;
+  let isGlobal = formData.get("isGlobal") === "true";
 
   if (!file || !documentType || !email) {
     return NextResponse.json({ error: "Falta archivo, tipo de documento o usuario" }, { status: 400 });
@@ -57,12 +57,35 @@ export async function POST (req: Request) {
     }
 
     if (user.roleId === 4) {
-      subjectId = parseInt(formData.get("subjectId") as string, 10);
-      semesterId = parseInt(formData.get("semesterId") as string, 10);
-      isGlobal = true;
+      if (isGlobal) {
+        // Si es archivo global, asignamos subjectId y semesterId desde el formulario
+        subjectId = parseInt(formData.get("subjectId") as string, 10);
+        semesterId = parseInt(formData.get("semesterId") as string, 10);
 
-      if (!subjectId || !semesterId || isNaN(subjectId) || isNaN(semesterId)) {
-        return NextResponse.json({ error: "Asignatura o semestre no válido o no seleccionado" }, { status: 400 });
+        if (!subjectId || !semesterId || isNaN(subjectId) || isNaN(semesterId)) {
+          return NextResponse.json(
+            { error: "Asignatura o semestre no válido o no seleccionado" },
+            { status: 400 },
+          );
+        }
+      } else {
+        // Si no es global, se utiliza el groupId para obtener subjectId y semesterId del grupo
+        if (!groupId) {
+          return NextResponse.json({ error: "Debe seleccionar un grupo si no es archivo global" }, { status: 400 });
+        }
+
+        // Buscar el grupo para obtener subjectId y semesterId
+        const group = await prisma.group.findUnique({
+          where: { id: Number(groupId) },
+          include: { subject: true, semester: true },
+        });
+
+        if (!group) {
+          return NextResponse.json({ error: "Grupo no encontrado" }, { status: 400 });
+        }
+
+        subjectId = group.subjectId;
+        semesterId = group.semesterId;
       }
     }
 
@@ -106,7 +129,8 @@ export async function POST (req: Request) {
       isGlobal
     });
 
-    await saveOnPinecone([file]);
+    const indexName = documentType.toLowerCase();
+    await saveOnPinecone([file], indexName);
 
     return NextResponse.json({ message: "Documento subido exitosamente", document });
   } catch (error) {

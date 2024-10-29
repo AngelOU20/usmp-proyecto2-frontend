@@ -12,13 +12,16 @@ import { getVectorStore } from "./vector-store";
 type callChainArgs = {
   question: string;
   chatHistory: string;
+  indexName: string;
 };
 
-export async function callChain ({ question, chatHistory }: callChainArgs) {
+export async function callChain ({ question, chatHistory, indexName }: callChainArgs) {
   try {
     // Open AI recommendation
     const sanitizedQuestion = question.trim().replaceAll("\n", " ");
-    const vectorStore = await getVectorStore();
+
+    const vectorStore = await getVectorStore(indexName);
+
     const { stream, handlers } = LangChainStream({
       experimental_streamData: true,
     });
