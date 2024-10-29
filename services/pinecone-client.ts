@@ -8,11 +8,11 @@ class Pinecone {
   client: PineconeClient;
   indexName: string;
 
-  constructor () {
+  constructor (indexName?: string) {
     this.client = new PineconeClient({
       apiKey: env.PINECONE_API_KEY || "",
     });
-    this.indexName = env.PINECONE_INDEX_NAME;
+    this.indexName = indexName || env.PINECONE_INDEX_NAME;
   }
 
   async init () {
@@ -21,6 +21,7 @@ class Pinecone {
       const existingIndexNames =
         existingIndexes.indexes?.map((index) => index.name) || [];
 
+      // Verificar y crear el índice solo si no existe
       if (!existingIndexNames.includes(this.indexName)) {
         logger.info(
           `Pinecone index name: ${this.indexName} does not exist. Creating index...`,
@@ -70,8 +71,8 @@ class Pinecone {
   }
 }
 
-export const getPineconeClient = async () => {
-  const pineconeInstance = new Pinecone();
+export const getPineconeClient = async (indexName: string) => {
+  const pineconeInstance = new Pinecone(indexName);
   const initialized = await pineconeInstance.init();
   return initialized;
 };

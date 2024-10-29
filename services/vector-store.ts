@@ -6,12 +6,15 @@ import { PineconeStore } from "@langchain/pinecone";
 import { getPineconeClient } from "./pinecone-client";
 import { Document } from "@langchain/core/documents";
 
-export async function embedAndStoreDocs (docs: Document<Record<string, unknown>>[]) {
+export async function embedAndStoreDocs (
+  docs: Document<Record<string, unknown>>[],
+  indexName: string,
+) {
   try {
-    const pineconeClient = await getPineconeClient();
+    const pineconeClient = await getPineconeClient(indexName);
     const embeddings = new OpenAIEmbeddings();
 
-    const index = pineconeClient.index(env.PINECONE_INDEX_NAME);
+    const index = pineconeClient.index(indexName || env.PINECONE_INDEX_NAME);
 
     // Almacenar los documentos completos en Pinecone
     await PineconeStore.fromDocuments(docs, embeddings, {
@@ -25,11 +28,13 @@ export async function embedAndStoreDocs (docs: Document<Record<string, unknown>>
 }
 
 // Returns vector-store handle to be used a retrievers on langchains
-export async function getVectorStore () {
+export async function getVectorStore (indexName: string) {
   try {
-    const pineconeClient = await getPineconeClient();
+    const pineconeClient = await getPineconeClient(indexName);
     const embeddings = new OpenAIEmbeddings();
-    const index = pineconeClient.index(env.PINECONE_INDEX_NAME);
+
+
+    const index = pineconeClient.index(indexName || env.PINECONE_INDEX_NAME);
 
     const vectorStore = await PineconeStore.fromExistingIndex(embeddings, {
       pineconeIndex: index,
