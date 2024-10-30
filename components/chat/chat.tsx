@@ -24,8 +24,6 @@ export function Chat({ sessionId }: ChatProps) {
       body: { sessionId },
     });
 
-  const maxHeight = "188px";
-
   // Ajusta la altura del textarea automáticamente
   useEffect(() => {
     if (textareaRef.current) {
