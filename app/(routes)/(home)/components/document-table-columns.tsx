@@ -73,6 +73,18 @@ export function getColumns(
       cell: ({ row }) => (
         <div className="capitalize">{row.getValue("groupName")}</div>
       ),
+      filterFn: (row, columnId, filterValue) => {
+        console.log(
+          "Filtrando grupo:",
+          row.getValue(columnId),
+          "con",
+          filterValue
+        );
+        return (
+          (row.getValue(columnId) as string).toLowerCase() ===
+          (filterValue[0] as string).toLowerCase()
+        );
+      },
     },
     {
       accessorKey: "subjectName",
@@ -80,6 +92,18 @@ export function getColumns(
       cell: ({ row }) => (
         <div className="capitalize">{row.getValue("subjectName")}</div>
       ),
+      filterFn: (row, columnId, filterValue) => {
+        console.log(
+          "Filtrando asignatura:",
+          row.getValue(columnId),
+          "con",
+          filterValue
+        );
+        return (
+          (row.getValue(columnId) as string).toLowerCase() ===
+          (filterValue[0] as string).toLowerCase()
+        );
+      },
     },
     {
       accessorKey: "students",
@@ -87,9 +111,18 @@ export function getColumns(
       cell: ({ row }) => {
         const students: string[] = row.getValue("students");
         return (
-          <div className="capitalize">
+          <div className="capitalize text-sm">
             {students.length > 0 ? students.join(", ") : "Sin estudiantes"}
           </div>
+        );
+      },
+      filterFn: (row, columnId, filterValue) => {
+        const searchValue = filterValue.toLowerCase();
+        const students: string[] = row.getValue(columnId);
+
+        // Verificamos si alguno de los nombres de los estudiantes incluye el valor de búsqueda
+        return students.some((student) =>
+          student.toLowerCase().includes(searchValue)
         );
       },
     },
