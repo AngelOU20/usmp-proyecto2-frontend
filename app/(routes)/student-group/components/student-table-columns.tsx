@@ -75,6 +75,19 @@ export function getColumns(
       cell: ({ row }) => (
         <div className="uppercase">{row.getValue("group")}</div>
       ),
+      filterFn: (row, columnId, filterValue) => {
+        console.log(
+          "Filtrando grupo:",
+          row.getValue(columnId),
+          "con",
+          filterValue
+        );
+        // Asegúrate de que `filterValue` es un array y toma el primer valor
+        return (
+          (row.getValue(columnId) as string).toUpperCase() ===
+          (filterValue[0] as string).toUpperCase()
+        );
+      },
     },
     {
       accessorKey: "mentor",
@@ -87,6 +100,17 @@ export function getColumns(
       accessorKey: "subject",
       header: "Asignatura",
       cell: ({ row }) => <div>{row.getValue("subject")}</div>,
+      filterFn: (row, columnId, filterValue) => {
+        console.log("Filtrando:", row.getValue(columnId), "con", filterValue);
+        // Accedemos al primer elemento de filterValue si es un array
+        const filterText = Array.isArray(filterValue)
+          ? filterValue[0]
+          : filterValue;
+        return (
+          (row.getValue(columnId) as string).toLowerCase() ===
+          filterText.toLowerCase()
+        );
+      },
     },
     {
       accessorKey: "semester",
