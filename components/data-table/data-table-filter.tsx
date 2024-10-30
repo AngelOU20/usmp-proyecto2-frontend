@@ -82,20 +82,19 @@ export function DataTableFacetedFilter<TData, TValue>({
                   <CommandItem
                     key={option.value}
                     onSelect={() => {
-                      // Si ya está seleccionado, lo deselecciona
                       const newValue = isSelected ? undefined : option.value;
                       column?.setFilterValue(newValue ? [newValue] : undefined);
                     }}
                   >
                     <div
                       className={cn(
-                        "mr-2 flex size-4 items-center justify-center rounded-sm border border-primary",
-                        isSelected
-                          ? "bg-primary text-primary-foreground"
-                          : "opacity-50 [&_svg]:invisible"
+                        "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                        isSelected ? "bg-primary text-primary-foreground" : ""
                       )}
                     >
-                      <Check className="size-4" aria-hidden="true" />
+                      {isSelected && (
+                        <Check className="h-4 w-4" aria-hidden="true" />
+                      )}
                     </div>
 
                     <span>{option.label}</span>

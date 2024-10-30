@@ -32,16 +32,24 @@ export async function POST (req: NextRequest) {
     );
   }
 
-  // Definir un índice basado en palabras clave encontradas en la pregunta
-  let indexName = "otros"; // Establece "otros" como el índice por defecto
+  const normalizeText = (text: string): string => {
+    return text
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, ""); // Elimina las tildes
+  };
 
-  if (question.includes("rúbrica")) {
+  const normalizedQuestion = normalizeText(question);
+
+  let indexName = "otros";
+
+  if (normalizedQuestion.includes("rubrica")) {
     indexName = "rubrica";
-  } else if (question.includes("informe")) {
+  } else if (normalizedQuestion.includes("informe")) {
     indexName = "informe";
-  } else if (question.includes("bitácora")) {
+  } else if (normalizedQuestion.includes("bitacora")) {
     indexName = "bitacora";
-  } else if (question.includes("directiva")) {
+  } else if (normalizedQuestion.includes("directiva")) {
     indexName = "directiva";
   }
 
