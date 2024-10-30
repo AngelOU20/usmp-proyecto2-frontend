@@ -3,15 +3,18 @@
 import { Chat } from "@/components/chat";
 import { nanoid } from "ai";
 import { useState } from "react";
+import { GuideDialog } from "./components/guide-dialog";
 
 export default function Home() {
   const [sessionId, setSessionId] = useState<string>(`session-id-${nanoid()}`);
 
   return (
-    <main className="relative container flex flex-col">
+    <main className="relative sm:container sm:mt-0 mt-6 flex flex-col">
       <h1 className="text-3xl font-bold text-center py-4">
         USMP GPT - Proyecto I y II
       </h1>
+
+      <GuideDialog />
 
       <div className="flex flex-1 py-4">
         <div className="w-full">
