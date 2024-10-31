@@ -18,6 +18,15 @@ export async function getGroupsByMentor (email: string) {
         include: {
           subject: true,
           semester: true,
+          students: {
+            select: {
+              user: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -33,5 +42,6 @@ export async function getGroupsByMentor (email: string) {
     titleProject: group.titleProject || "Sin proyecto",
     subject: group.subject?.name || "Sin asignatura",
     semester: group.semester?.name || "Sin semestre",
+    students: group.students.map((student) => student.user.name),
   }));
 }
