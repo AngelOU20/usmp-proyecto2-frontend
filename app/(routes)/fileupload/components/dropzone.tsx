@@ -13,6 +13,7 @@ export function FileInput({ handleFileChange }: FileInputProps) {
       <input
         id="file-upload"
         type="file"
+        accept="application/pdf"
         onChange={(e) => {
           const file = e.target.files?.[0] || null;
           if (file) {
