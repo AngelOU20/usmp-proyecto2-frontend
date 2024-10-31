@@ -9,6 +9,7 @@ export interface Group {
   titleProject: string;
   subject: string;
   semester: string;
+  students: (string | null)[];
 }
 
 export interface TypeDocument {
