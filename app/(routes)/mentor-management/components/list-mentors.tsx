@@ -6,7 +6,7 @@ import { getColumns } from "./mentor-table-columns";
 import { Spinner } from "@/components/spinner";
 import { toast } from "@/hooks/use-toast";
 
-export const ListMentors = () => {
+export const ListMentors = ({ refreshKey }: { refreshKey: number }) => {
   const [mentorData, setMentorData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +57,7 @@ export const ListMentors = () => {
 
   useEffect(() => {
     fetchMentors();
-  }, []);
+  }, [refreshKey]);
 
   if (isLoading) {
     return (

@@ -5,7 +5,11 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
-export const CsvUploaderMentor = () => {
+export const CsvUploaderMentor = ({
+  onUploadSuccess,
+}: {
+  onUploadSuccess: () => void;
+}) => {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const router = useRouter();
@@ -45,7 +49,7 @@ export const CsvUploaderMentor = () => {
           description: "El archivo CSV se ha subido correctamente.",
           variant: "default",
         });
-        router.refresh();
+        onUploadSuccess();
       } else {
         toast({
           title: "Error",

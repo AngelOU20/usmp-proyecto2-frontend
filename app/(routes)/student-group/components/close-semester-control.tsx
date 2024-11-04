@@ -11,7 +11,11 @@ import { ConfirmationDialog } from "@/components/confirmation-dialog";
 import { SemesterSelector, SubjectSelector } from "@/components/selector";
 import { toast } from "@/hooks/use-toast";
 
-export function CloseSemesterControl() {
+export function CloseSemesterControl({
+  onCloseSuccess,
+}: {
+  onCloseSuccess: () => void;
+}) {
   const [selectedSemester, setSelectedSemester] = useState<string | undefined>(
     undefined
   );
@@ -45,6 +49,7 @@ export function CloseSemesterControl() {
           description: `El semestre ${selectedSemester} para la asignatura ${selectedSubject} se ha cerrado correctamente.`,
           variant: "default",
         });
+        onCloseSuccess();
       } catch (error) {
         console.error("Error al cerrar el semestre:", error);
         toast({
