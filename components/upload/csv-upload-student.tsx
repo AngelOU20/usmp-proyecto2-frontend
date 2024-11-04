@@ -3,12 +3,16 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
 
-export const CsvUploaderStudent = ({ className = "" }) => {
+export const CsvUploaderStudent = ({
+  className = "",
+  onUploadSuccess,
+}: {
+  className: string;
+  onUploadSuccess: () => void;
+}) => {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const router = useRouter();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -45,7 +49,7 @@ export const CsvUploaderStudent = ({ className = "" }) => {
           description: "El archivo CSV se ha subido correctamente.",
           variant: "default",
         });
-        router.refresh();
+        onUploadSuccess();
       } else {
         toast({
           title: "Error",
