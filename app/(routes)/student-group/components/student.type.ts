@@ -9,4 +9,6 @@ export type Student = {
   status: string;
   semester: string;
   subject: string;
+  subjectId: number;
+  semesterId: number;
 };

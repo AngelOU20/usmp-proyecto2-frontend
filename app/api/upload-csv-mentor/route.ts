@@ -10,51 +10,56 @@ const CsvSchema = z.object({
   email: z.string().email(),
 });
 
-// Valida la información y la inserta en la base de datos
-const insertMentorToDB = async (data: z.infer<typeof CsvSchema>) => {
-  try {
-    // Verifica si el usuario ya existe
-    const existingUser = await prisma.user.findUnique({
-      where: { email: data.email },
+// Función para actualizar el rol de usuario
+const updateUserRole = async (email: string) => {
+  return prisma.user.update({
+    where: { email },
+    data: { roleId: 3 },
+  });
+};
+
+// Función para reactivar un mentor inactivo
+const reactivateMentor = async (userId: string) => {
+  return prisma.mentor.update({
+    where: { userId },
+    data: { isActive: true },
+  });
+};
+
+// Función para crear un nuevo mentor y usuario
+const createNewMentor = async (data: z.infer<typeof CsvSchema>) => {
+  const newUser = await prisma.user.create({
+    data: {
+      email: data.email,
+      name: data.name,
+      roleId: 3,
+    },
+  });
+  return prisma.mentor.create({
+    data: { userId: newUser.id, isActive: true },
+  });
+};
+
+// Función para insertar o actualizar mentores en la base de datos
+const insertOrUpdateMentor = async (data: z.infer<typeof CsvSchema>) => {
+  const existingUser = await prisma.user.findUnique({
+    where: { email: data.email },
+  });
+
+  if (!existingUser) return createNewMentor(data);
+
+  await updateUserRole(data.email);
+
+  const existingMentor = await prisma.mentor.findUnique({
+    where: { userId: existingUser.id },
+  });
+
+  if (existingMentor && !existingMentor.isActive) {
+    return reactivateMentor(existingUser.id);
+  } else if (!existingMentor) {
+    return prisma.mentor.create({
+      data: { userId: existingUser.id, isActive: true },
     });
-
-    if (existingUser) {
-      // Actualizar el rol del usuario a asesor si ya existe
-      await prisma.user.update({
-        where: { email: data.email },
-        data: {
-          roleId: 3, // Asigna el roleId 3 por defecto para asesores
-        },
-      });
-
-      // Asegúrate de que exista el registro en la tabla mentor
-      await prisma.mentor.upsert({
-        where: { userId: existingUser.id },
-        update: {},
-        create: {
-          userId: existingUser.id,
-        },
-      });
-
-    } else {
-      // Si el usuario no existe, crear un nuevo usuario y su registro en la tabla mentor
-      const newUser = await prisma.user.create({
-        data: {
-          email: data.email,
-          name: data.name,
-          roleId: 3, // Asigna el roleId 3 por defecto para asesores
-        },
-      });
-
-      // Crear su correspondiente registro en la tabla mentor
-      await prisma.mentor.create({
-        data: {
-          userId: newUser.id,
-        },
-      });
-    }
-  } catch (error) {
-    console.error('Error al insertar el mentor:', error);
   }
 };
 
@@ -66,30 +71,22 @@ export async function POST (req: NextRequest) {
     return NextResponse.json({ error: 'Archivo no encontrado' }, { status: 400 });
   }
 
-  // Convierte el archivo en un stream de lectura
   const buffer = Buffer.from(await file.arrayBuffer());
   const stream = Readable.from(buffer.toString());
-
   const results: z.infer<typeof CsvSchema>[] = [];
-
   const parser = stream.pipe(csv());
-
-  const mapRowToSchema = (row: any) => ({
-    name: row.nombre,   // Mapear el campo 'nombre' a 'name'
-    email: row.correo   // Mapear 'correo' a 'email'
-  });
 
   for await (const row of parser) {
     try {
-      const validatedData = CsvSchema.parse(mapRowToSchema(row)); // Mapeo y validación
-      results.push(validatedData);
+      const data = CsvSchema.parse({ name: row.nombre, email: row.correo });
+      results.push(data);
     } catch (error) {
       console.error('Error al validar los datos:', error);
     }
   }
 
-  for (const result of results) {
-    await insertMentorToDB(result);
+  for (const data of results) {
+    await insertOrUpdateMentor(data);
   }
 
   return NextResponse.json({ message: 'Mentores cargados exitosamente' });

@@ -124,25 +124,50 @@ export async function POST (req: Request) {
       console.log(`El grupo ${grupo} ya tiene un mentor asignado.`);
     }
 
-    // Verificar si el estudiante ya existe en la tabla Student
-    const existingStudent = await prisma.student.findUnique({
-      where: { userId: user.id },
+    // Desactivar cualquier registro anterior de este estudiante en la misma asignatura
+    await prisma.student.updateMany({
+      where: {
+        userId: user.id,
+        subjectId: subject.id,
+        isActive: true,
+      },
+      data: { isActive: false },
     });
 
-    if (!existingStudent) {
-      // Crear el registro en la tabla Student solo si no existe
-      await prisma.student.create({
-        data: {
-          userId: user.id,
-          groupId: group.id,
-          subjectId: subject.id, // Vincular el estudiante con la asignatura
-          semesterId: semester.id, // Vincular el estudiante con el semestre
-          registrationNumber: nroMatricula,
-        },
-      });
-    } else {
-      console.log(`El estudiante con userId ${user.id} ya existe.`);
+    // Verificar si ya existe un registro en el mismo semestre y asignatura para el estudiante
+    const existingStudent = await prisma.student.findFirst({
+      where: {
+        userId: user.id,
+        semesterId: semester.id,
+        subjectId: subject.id,
+      },
+    });
+
+    if (existingStudent) {
+      if (!existingStudent.isActive) {
+        // Reactivar el estudiante si ya existe y está inactivo
+        await prisma.student.update({
+          where: { id: existingStudent.id },
+          data: { isActive: true },
+        });
+        console.log(`Estudiante ${nombre} reactivado en la asignatura ${asignatura} para el semestre ${semestre}.`);
+      } else {
+        console.log(`El estudiante ${nombre} ya tiene un registro activo en la asignatura ${asignatura} para el semestre ${semestre}.`);
+      }
+      continue; // Saltar al siguiente estudiante en el CSV
     }
+
+    // Crear un nuevo registro en la tabla Student para el nuevo semestre
+    await prisma.student.create({
+      data: {
+        userId: user.id,
+        groupId: group.id,
+        subjectId: subject.id,
+        semesterId: semester.id,
+        registrationNumber: nroMatricula,
+        isActive: true, // Marcar el nuevo registro como activo
+      },
+    });
   }
 
   return NextResponse.json({ message: "Archivo subido y procesado con éxito" });

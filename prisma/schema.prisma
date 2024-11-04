@@ -27,7 +27,7 @@ model User {
   accounts      Account[]
   documents     Document[]
   mentor        Mentor?
-  student       Student?
+  students      Student[]       // Relación de uno a muchos con Student
   authority     Authority?
   
   role          Role?           @relation(fields: [roleId], references: [id])
@@ -39,6 +39,7 @@ model User {
 model Mentor {
   id            Int             @id @default(autoincrement())
   userId        String          @unique
+  isActive      Boolean         @default(true)
   
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
@@ -50,7 +51,7 @@ model Mentor {
 
 model Student {
   id                  Int       @id @default(autoincrement())
-  userId              String    @unique // Llave foránea que apunta a User
+  userId              String    // Llave foránea que apunta a User
   groupId             Int? 
   subjectId           Int?      // Relación con la tabla `Subject`
   semesterId          Int       // Relación con la tabla Semestre
@@ -61,6 +62,8 @@ model Student {
   group               Group?    @relation(fields: [groupId], references: [id], onDelete: SetNull)
   subject             Subject?  @relation(fields: [subjectId], references: [id])
   semester            Semester  @relation(fields: [semesterId], references: [id])
+
+  @@unique([userId, semesterId, subjectId])
 }
 
 model Group {
