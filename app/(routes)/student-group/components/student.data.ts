@@ -12,6 +12,8 @@ export const users: Student[] = [
     mentor: "Jose Antonio Wu",
     semester: "string",
     subject: "string",
+    subjectId: 1,
+    semesterId: 1,
   },
   {
     id: "2",
@@ -24,6 +26,8 @@ export const users: Student[] = [
     mentor: "Jose Antonio Wu",
     semester: "string",
     subject: "string",
+    subjectId: 1,
+    semesterId: 1,
   },
   {
     id: "3",
@@ -36,5 +40,7 @@ export const users: Student[] = [
     mentor: "Jose Antonio Wu",
     semester: "string",
     subject: "string",
+    subjectId: 1,
+    semesterId: 1,
   },
 ];
