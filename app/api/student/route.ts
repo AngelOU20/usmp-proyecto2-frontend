@@ -58,6 +58,8 @@ export async function GET (req: NextRequest) {
       mentor: student.group?.mentor?.user?.name || "Sin Asesor",
       subject: student.group?.subject?.name || "Sin Asignatura",
       semester: student.semester?.name || student.group?.semester?.name || "Sin semestre",
+      semesterId: student.semesterId,
+      subjectId: student.subjectId,
     }));
 
     // Retornar los datos en formato JSON
@@ -72,19 +74,25 @@ export async function GET (req: NextRequest) {
 export async function DELETE (req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const studentId = searchParams.get('id');
+  const semesterId = searchParams.get('semesterId');
+  const subjectId = searchParams.get('subjectId');
 
-  if (!studentId) {
-    return NextResponse.json({ error: "Falta el ID del estudiante" }, { status: 400 });
+  if (!studentId || !semesterId || !subjectId) {
+    return NextResponse.json({ error: "Faltan parámetros: id del estudiante, semestre o asignatura" }, { status: 400 });
   }
 
   try {
     await prisma.student.update({
       where: {
-        userId: studentId,
+        userId_semesterId_subjectId: {
+          userId: studentId,
+          semesterId: Number(semesterId),
+          subjectId: Number(subjectId),
+        },
       },
       data: {
         isActive: false,
-      }
+      },
     });
 
     // Actualizar el roleId del usuario a '1' (asumido como 'Agente Libre')
