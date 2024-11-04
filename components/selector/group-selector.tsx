@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Info, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -8,10 +10,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Group } from "@/types/global.types";
-import { Info, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Group } from "@/types/global.types";
 
 interface GroupSelectorProps {
   groups: Group[];
@@ -30,7 +30,7 @@ export function GroupSelector({
   return (
     <div className="relative flex items-start justify-start flex-wrap sm:flex-nowrap">
       <div className="flex flex-col items-start justify-center w-full">
-        <label className="mb-2 text-lg">Selecciona un grupo</label>
+        <label className="mb-2 text-sm">Selecciona un grupo</label>
         <Select onValueChange={setSelectedGroup} value={selectedGroup}>
           <SelectTrigger className="border p-2 rounded-lg mb-4 max-w-xl">
             <SelectValue placeholder="Selecciona un grupo" />

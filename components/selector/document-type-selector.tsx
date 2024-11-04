@@ -12,16 +12,20 @@ interface DocumentTypeSelectorProps {
   documentTypes: { id: number; name: string }[];
   selectedDocumentType: string;
   setSelectedDocumentType: (value: string) => void;
+  loading?: boolean;
+  error?: string | null;
 }
 
 export function DocumentTypeSelector({
   documentTypes,
   selectedDocumentType,
   setSelectedDocumentType,
+  loading,
+  error,
 }: DocumentTypeSelectorProps) {
   return (
     <div>
-      <label className="mb-2 text-lg">Selecciona un tipo de documento</label>
+      <label className="mb-2 text-sm">Selecciona un tipo de documento</label>
       <Select
         onValueChange={setSelectedDocumentType}
         value={selectedDocumentType}
@@ -32,11 +36,21 @@ export function DocumentTypeSelector({
         <SelectContent>
           <SelectGroup>
             <SelectLabel>Tipos de documentos</SelectLabel>
-            {documentTypes.map((type) => (
-              <SelectItem key={type.id} value={type.name}>
-                {type.name}
+            {loading ? (
+              <SelectItem value="loading" disabled>
+                Cargando tipos de documentos...
               </SelectItem>
-            ))}
+            ) : error ? (
+              <SelectItem value="error" disabled>
+                Error al cargar tipos de documentos
+              </SelectItem>
+            ) : (
+              documentTypes.map((type) => (
+                <SelectItem key={type.id} value={type.name}>
+                  {type.name}
+                </SelectItem>
+              ))
+            )}
           </SelectGroup>
         </SelectContent>
       </Select>

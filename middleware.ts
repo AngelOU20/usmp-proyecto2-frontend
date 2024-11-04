@@ -54,7 +54,6 @@ export default auth(async (req) => {
     }
   }
 
-
   return NextResponse.next();
 });
 
@@ -65,5 +64,3 @@ export const config = {
     "/(api|trpc)(.*)"
   ],
 };
-
-

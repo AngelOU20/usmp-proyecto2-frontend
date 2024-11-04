@@ -3,11 +3,14 @@ import { NextResponse } from "next/server";
 
 export async function GET (request: Request) {
   const mentors = await prisma.mentor.findMany({
+    where: {
+      isActive: true,
+    },
     orderBy: {
       createdAt: "asc",
     },
     include: {
-      user: true, // Incluye los datos de la tabla user relacionados con cada asesor
+      user: true,
     },
   });
 
@@ -30,20 +33,25 @@ export async function DELETE (request: Request) {
   }
 
   try {
-    await prisma.mentor.delete({
-      where: {
-        userId: mentorId,
-      },
-    });
+    await prisma.$transaction([
+      prisma.mentor.update({
+        where: {
+          userId: mentorId,
+        },
+        data: {
+          isActive: false,
+        },
+      }),
 
-    await prisma.user.update({
-      where: {
-        id: mentorId,
-      },
-      data: {
-        roleId: 1,
-      },
-    });
+      prisma.user.update({
+        where: {
+          id: mentorId,
+        },
+        data: {
+          roleId: 1,
+        },
+      }),
+    ]);
 
     return NextResponse.json({ message: "Asesor eliminado y roleId actualizado a 1" });
   } catch (error) {
