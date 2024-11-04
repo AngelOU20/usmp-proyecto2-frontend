@@ -1,53 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Spinner } from "@/components/spinner";
 import { toast } from "@/hooks/use-toast";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { getGroupsByMentor } from "@/actions/getGroupsByMentor";
 import { getDocumentTypes } from "@/actions/getDocumentTypes";
 import { getSubjects } from "@/actions/getSubjects";
 import { getSemesters } from "@/actions/getSemesters";
 import { getGroups } from "@/actions/getGroups";
-import {
-  FileItem,
-  Group,
-  TypeDocument,
-  Subject,
-  Semester,
-} from "@/types/global.types";
+import { FileItem } from "@/types/global.types";
 import { Loader2 } from "lucide-react";
-import { DocumentTypeSelector } from "./components/document-type-selector";
-import { GroupSelector } from "./components/group-selector";
-import { SubjectSemesterSelector } from "./components/subject-semester-selector";
 import { FileInput } from "./components/dropzone";
 import { FileItemDisplay } from "./components/file-item-display";
+import { ConfirmationDialog } from "@/components/confirmation-dialog";
+import {
+  SubjectSelector,
+  SemesterSelector,
+  DocumentTypeSelector,
+  GroupSelector,
+} from "@/components/selector";
+import { useFetchData } from "@/hooks/use-fetch-data";
 
 export default function FileUploadPage() {
   const [fileItem, setFileItem] = useState<FileItem | null>(null);
 
-  const [documentTypes, setDocumentTypes] = useState<TypeDocument[]>([]);
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>("");
-
-  const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroup, setSelectedGroup] = useState<string>("");
-
-  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<string>("");
-
-  const [semesters, setSemesters] = useState<Semester[]>([]);
   const [selectedSemester, setSelectedSemester] = useState<string>("");
 
   const [isGlobal, setIsGlobal] = useState(false);
@@ -59,62 +41,44 @@ export default function FileUploadPage() {
     setFileItem(file);
   };
 
-  useEffect(() => {
-    const fetchDocumentTypes = async () => {
-      try {
-        const types = await getDocumentTypes();
-        setDocumentTypes(types);
-      } catch (error) {
-        console.error("Error al obtener los tipos de documentos:", error);
-      }
-    };
-    fetchDocumentTypes();
-  }, []);
+  const {
+    data: documentTypes,
+    loading: documentTypesLoading,
+    error: documentTypesError,
+  } = useFetchData(getDocumentTypes);
 
-  useEffect(() => {
-    async function fetchGroups() {
-      if (session?.user?.roleId === 3 && session.user.email) {
-        try {
-          const groupsData = await getGroupsByMentor(session.user.email);
-          setGroups(groupsData);
-        } catch (error) {
-          console.error("Error al obtener los grupos del asesor:", error);
-        }
-      }
+  const {
+    data: semesters,
+    loading: semestersLoading,
+    error: semestersError,
+  } = useFetchData(getSemesters);
 
-      if (session?.user?.roleId === 4) {
-        try {
-          const groupsData = await getGroups();
-          setGroups(groupsData);
-        } catch (error) {
-          console.error("Error al obtener los grupos del asesor:", error);
-        }
-      }
-    }
-    fetchGroups();
-  }, [session]);
+  const {
+    data: subjects,
+    loading: subjectsLoading,
+    error: subjectsError,
+  } = useFetchData(getSubjects);
 
-  useEffect(() => {
-    if (session?.user?.roleId === 4) {
-      const fetchSubjectsAndSemesters = async () => {
-        try {
-          const subjectsData = await getSubjects();
-          const semestersData = await getSemesters();
-          setSubjects(subjectsData);
-          setSemesters(semestersData);
-        } catch (error) {
-          console.error("Error al obtener asignaturas o semestres:", error);
-        }
-      };
-      fetchSubjectsAndSemesters();
-    }
-  }, [session]);
+  const fetchFunction =
+    session?.user?.roleId === 3 ? getGroupsByMentor : getGroups;
+  const shouldFetch =
+    session?.user?.roleId === 4 ||
+    (session?.user?.roleId === 3 && !!session.user.email);
+  const params =
+    session?.user?.roleId === 3 && session.user.email
+      ? ([session.user.email] as [string])
+      : undefined;
+
+  const {
+    data: groups,
+    loading,
+    error,
+  } = useFetchData(fetchFunction, { shouldFetch, params });
 
   const removeFile = () => {
     setFileItem(null);
   };
 
-  // Función para subir el archivo
   const uploadFile = async (replace = false) => {
     setIsLoading(true);
 
@@ -238,12 +202,13 @@ export default function FileUploadPage() {
       <h1 className="text-2xl mb-4">Subida de archivos</h1>
 
       <DocumentTypeSelector
-        documentTypes={documentTypes}
+        documentTypes={documentTypes || []}
         selectedDocumentType={selectedDocumentType}
         setSelectedDocumentType={setSelectedDocumentType}
+        loading={documentTypesLoading}
+        error={documentTypesError}
       />
 
-      {/* Checkbox para Archivo Global */}
       {session?.user?.roleId === 4 && (
         <div className="flex items-center gap-x-2 mb-4">
           <Checkbox
@@ -273,14 +238,23 @@ export default function FileUploadPage() {
       )}
 
       {isGlobal && session?.user?.roleId === 4 && (
-        <SubjectSemesterSelector
-          subjects={subjects}
-          semesters={semesters}
-          selectedSubject={selectedSubject}
-          selectedSemester={selectedSemester}
-          setSelectedSubject={setSelectedSubject}
-          setSelectedSemester={setSelectedSemester}
-        />
+        <>
+          <SubjectSelector
+            subjects={subjects}
+            selectedSubject={selectedSubject}
+            setSelectedSubject={setSelectedSubject}
+            loading={subjectsLoading}
+            error={subjectsError}
+          />
+
+          <SemesterSelector
+            semesters={semesters}
+            selectedSemester={selectedSemester}
+            setSelectedSemester={setSelectedSemester}
+            loading={semestersLoading}
+            error={semestersError}
+          />
+        </>
       )}
 
       <FileInput handleFileChange={handleFileChange} />
@@ -293,29 +267,21 @@ export default function FileUploadPage() {
         disabled={isLoading}
       >
         {isLoading ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <Loader2 className="h-4 w-4 animate-spin" />
         ) : (
           "Cargar documento"
         )}
       </Button>
 
-      <AlertDialog open={openDialog} onOpenChange={setOpenDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Reemplazar archivo?</AlertDialogTitle>
-            <AlertDialogDescription>
-              El archivo ya existe. Esta acción reemplazará el archivo existente
-              con el nuevo archivo subido.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmReplace}>
-              Reemplazar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmationDialog
+        isOpen={openDialog}
+        onOpenChange={setOpenDialog}
+        title="¿Reemplazar archivo?"
+        description="El archivo ya existe. Esta acción reemplazará el archivo existente con el nuevo archivo subido."
+        confirmText="Reemplazar"
+        cancelText="Cancelar"
+        onConfirm={confirmReplace}
+      />
     </div>
   );
 }

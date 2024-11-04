@@ -28,11 +28,18 @@ export const ListStudents = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (
+    id: string,
+    semesterId: number,
+    subjectId: number
+  ) => {
     try {
-      const response = await fetch(`/api/student?id=${id}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/student?id=${id}&semesterId=${semesterId}&subjectId=${subjectId}`,
+        {
+          method: "DELETE",
+        }
+      );
       if (!response.ok) {
         throw new Error("Error al eliminar el estudiante");
       }
@@ -74,7 +81,6 @@ export const ListStudents = () => {
 
   return (
     <>
-      {/* <pre>{JSON.stringify(studentData, null, 2)}</pre> */}
       <StudentTable columns={columns} data={studentData} />
     </>
   );
