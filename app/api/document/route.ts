@@ -177,7 +177,7 @@ export async function GET (req: Request) {
       uploadDate: doc.uploadDate,
       type: doc.documentType.name,
       isGlobal: doc.isGlobal,
-      groupName: doc.group ? doc.group.name : "Sin grupo",
+      groupName: doc.isGlobal ? "Global" : doc.group ? doc.group.name : "Sin grupo",
       subjectName: doc.isGlobal ? doc.subject?.name : doc.group?.subject?.name || "Sin asignatura",
       semesterName: doc.isGlobal ? doc.semester?.name : doc.group?.semester?.name || "Sin semestre",
       students: doc.group ? doc.group.students.map((student: { user: { name: string; }; }) => student.user.name) : [],
