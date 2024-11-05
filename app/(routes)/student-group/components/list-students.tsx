@@ -7,7 +7,7 @@ import { getColumns } from "./student-table-columns";
 import { Student } from "./student.type";
 import { toast } from "@/hooks/use-toast";
 
-export const ListStudents = () => {
+export const ListStudents = ({ refreshKey }: { refreshKey: number }) => {
   const [studentData, setStudentData] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -65,7 +65,7 @@ export const ListStudents = () => {
 
   useEffect(() => {
     fetchStudents();
-  }, []);
+  }, [refreshKey]);
 
   if (isLoading) {
     return (
