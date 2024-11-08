@@ -1,16 +1,27 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { CsvUploaderStudent } from "@/components/upload/csv-upload-student";
 import { ListStudents } from "./components/list-students";
 import { CloseSemesterControl } from "./components/close-semester-control";
+import { Spinner } from "@/components/spinner";
 
 export default function StudentsGroupPage() {
   const [refreshKey, setRefreshKey] = useState(0);
+  const { data: session, status } = useSession();
 
   const triggerRefresh = () => {
     setRefreshKey((prevKey) => prevKey + 1);
   };
+
+  if (status === "loading") {
+    return (
+      <div className="max-w-6xl mx-auto p-4">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto flex flex-col flex-auto h-full">
@@ -21,7 +32,9 @@ export default function StudentsGroupPage() {
           className="flex-1"
           onUploadSuccess={triggerRefresh}
         />
-        <CloseSemesterControl onCloseSuccess={triggerRefresh} />
+        {session?.user.roleId === 4 && (
+          <CloseSemesterControl onCloseSuccess={triggerRefresh} />
+        )}
       </div>
 
       <ListStudents refreshKey={refreshKey} />
