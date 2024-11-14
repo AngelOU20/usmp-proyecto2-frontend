@@ -7,7 +7,7 @@ import { embedAndStoreDocs } from "../vector-store";
 export const saveOnPinecone = async (files: File[], documentType: string) => {
   try {
     logger.info("Preparing chunks from PDF files");
-    const docs = await getChunkedDocsFromUploadedPDFs(files);
+    const docs = await getChunkedDocsFromUploadedPDFs(files, documentType);
 
     const indexName = `${documentType}`;
 
