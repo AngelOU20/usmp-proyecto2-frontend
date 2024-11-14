@@ -15,12 +15,31 @@ type callChainArgs = {
   indexName: string;
 };
 
+// Función para detectar semana utilizando expresión regular
+function detectWeek (question: string): string | undefined {
+  const weekMatch = question.match(/\bS\d+\b/);
+  return weekMatch ? weekMatch[0] : undefined;
+}
+
 export async function callChain ({ question, chatHistory, indexName }: callChainArgs) {
   try {
-    // Open AI recommendation
-    const sanitizedQuestion = question.trim().replaceAll("\n", " ");
+    logger.info("Starting callChain function with question: ", question);
+    logger.info("Chat history in callChain: ", chatHistory);
+    logger.info("Index Name in callChain: ", indexName);
 
+    const sanitizedQuestion = question.trim().replaceAll("\n", " ");
     const vectorStore = await getVectorStore(indexName);
+
+    // Configurar filtros solo si estamos en el índice de "bitácora"
+    const filters: Record<string, string | undefined> = {};
+    if (indexName === "bitacora") {
+      // Detectar semana y nombres de estudiantes dinámicamente solo para "bitácora"
+      const week = detectWeek(sanitizedQuestion);
+
+      if (week) filters.week = week;
+    }
+
+    logger.info("Filters applied: ", filters);
 
     const { stream, handlers } = LangChainStream({
       experimental_streamData: true,
@@ -29,19 +48,19 @@ export async function callChain ({ question, chatHistory, indexName }: callChain
 
     const chain = ConversationalRetrievalQAChain.fromLLM(
       streamingModel,
-      vectorStore.asRetriever(),
+      vectorStore.asRetriever({
+        filter: filters,
+      }),
       {
         qaTemplate: QA_TEMPLATE,
         questionGeneratorTemplate: STANDALONE_QUESTION_TEMPLATE,
-        returnSourceDocuments: true, //default 4
+        returnSourceDocuments: true,
         questionGeneratorChainOptions: {
           llm: nonStreamingModel,
         },
       },
     );
 
-    // Question using chat-history
-    // Reference https://js.langchain.com/docs/modules/chains/popular/chat_vector_db#externally-managed-memory
     chain
       .call(
         {
@@ -52,21 +71,27 @@ export async function callChain ({ question, chatHistory, indexName }: callChain
       )
       .then(async (res) => {
         const sourceDocuments = res?.sourceDocuments;
-        const firstTwoDocuments = sourceDocuments.slice(0, 2);
-        const pageContents = firstTwoDocuments.map(
-          ({ pageContent }: { pageContent: string; }) => pageContent,
-        );
-        logger.info("already appended ", data);
-        data.append({
-          sources: pageContents,
-        });
+        if (!sourceDocuments || sourceDocuments.length === 0) {
+          logger.warn("No source documents returned from Pinecone.");
+        } else {
+          const firstTwoDocuments = sourceDocuments.slice(0, 2);
+          const pageContents = firstTwoDocuments.map(
+            ({ pageContent }: { pageContent: string; }) => pageContent,
+          );
+          logger.info("First two documents for context: ", pageContents);
+          data.append({
+            sources: pageContents,
+          });
+        }
         data.close();
+      })
+      .catch((error) => {
+        logger.error("Error while calling chain: ", error);
       });
 
-    // Return the readable stream
     return new StreamingTextResponse(stream, {}, data);
-  } catch (e) {
-    console.error(e);
-    throw new Error("Call chain method failed to execute successfully!!");
+  } catch (error) {
+    logger.error("Failed to execute callChain: ", error);
+    throw new Error("Call chain method failed to execute successfully!");
   }
 }
