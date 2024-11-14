@@ -3,24 +3,24 @@ import type { Message } from "ai";
 import { type NextRequest, NextResponse } from "next/server";
 import { callChain } from "@/services/langchain";
 
-// Función para formatear los mensajes
 const formatMessage = (message: Message) => {
-  return `${message.role === "user" ? "Human" : "Assistant"}: ${message.content
-    }`;
+  return `${message.role === "user" ? "Human" : "Assistant"}: ${message.content}`;
 };
 
 export async function POST (req: NextRequest) {
   const body = await req.json();
 
   const messages: Message[] = body.messages ?? [];
-  logger.info("Messages ", messages);
+  logger.info("Messages received in request: ", messages);
 
   const formattedPreviousMessages = messages.slice(0, -1).map(formatMessage);
   const question = messages[messages.length - 1].content;
 
-  logger.info("Chat history ", formattedPreviousMessages.join("\n"));
+  logger.info("Formatted Chat history: ", formattedPreviousMessages.join("\n"));
+  logger.info("Current Question: ", question);
 
   if (!question) {
+    logger.error("No question provided in request");
     return NextResponse.json(
       {
         error: "Bad Request",
@@ -53,6 +53,8 @@ export async function POST (req: NextRequest) {
     indexName = "directiva";
   }
 
+  logger.info("Selected Index Name: ", indexName);
+
   try {
     const streamingTextResponse = callChain({
       question,
@@ -62,7 +64,7 @@ export async function POST (req: NextRequest) {
 
     return streamingTextResponse;
   } catch (error) {
-    console.error("Internal server error ", error);
+    logger.error("Error in callChain function: ", error);
     return NextResponse.json(
       {
         error: "Error: Something went wrong. Try again!",
